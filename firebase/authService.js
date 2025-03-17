@@ -1,14 +1,15 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebaseConfig";  // Uvoz Firebase autentifikacije
+import { sendEmailVerification } from "firebase/auth";
+
 
 // Funkcija za registraciju korisnika
 export const registerUser = async (email, password) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    console.log("User registered:", userCredential.user);
-    return userCredential.user;
+    await sendEmailVerification(userCredential.user);
+    return userCredential;
   } catch (error) {
-    console.error("Error registering user:", error.code, error.message);
     throw error;
   }
 };
@@ -17,6 +18,9 @@ export const registerUser = async (email, password) => {
 export const loginUser = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    if (!userCredential.user.emailVerified) {
+      throw new Error("Email nije verifikovan. Proverite inbox i potvrdite email.");
+    }
     console.log("User logged in:", userCredential.user);
     return userCredential.user;
   } catch (error) {
@@ -24,3 +28,6 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
+
+
+
