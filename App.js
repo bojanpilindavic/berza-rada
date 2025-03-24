@@ -8,6 +8,7 @@ import JobDetailsScreen from "./screens/JobDetailsScreen"; // Ekran za prikaz de
 import ApplyScreen from "./screens/ApplyScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import LoginScreen from "./screens/LoginScreen";
+import ProfileScreen from "./screens/ProfileScreen";
 
 const Stack = createStackNavigator(); // Kreiramo stack navigator
 
@@ -21,6 +22,8 @@ const App = () => {
           <Stack.Screen name="ApplyScreen" options={{ title: "Prijava na oglas" }}  component={ApplyScreen} />
           <Stack.Screen name="RegisterScreen" options={{ title: "Registracija" }}  component={RegisterScreen} />
           <Stack.Screen name="LoginScreen" options={{ title: "Prijava" }}  component={LoginScreen} />
+          <Stack.Screen name="ProfileScreen" options={{ title: "ProfileScreen" }}  component={ProfileScreen} />
+
 
 
 

@@ -89,6 +89,15 @@ const Header = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Moj profil</Text>
+            <TouchableOpacity
+  onPress={() => {
+    setProfileMenuVisible(false); // zatvori meni
+    navigation.navigate("ProfileScreen"); // idi na profil
+  }}
+>
+  <Text style={styles.menuItem}>👤 Moj profil</Text>
+</TouchableOpacity>
+
             <TouchableOpacity onPress={handleLogout}>
               <Text style={styles.menuItem}>🚪 Odjavi se</Text>
             </TouchableOpacity>
