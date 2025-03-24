@@ -28,6 +28,29 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
+/*export const registerUser = async (email, password, userType, data, image = null) => {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Upload slike ako postoji
+    let imageURL = null;
+    if (image) {
+      imageURL = await uploadImageAsync(image, user.uid);
+    }
+
+    // Snimi korisnika u Firestore
+    await saveUserToFirestore(user.uid, userType, data, imageURL);
+
+    // Pošalji verifikacioni email
+    await sendEmailVerification(user);
+
+    return userCredential;
+  } catch (error) {
+    throw error;
+  }
+};
+*/
 
 
 
