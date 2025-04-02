@@ -11,6 +11,9 @@ import TermsOfService from "../components/TermsOfService";
 import PrivacyPolicy from "../components/PrivacyPolicy";
 import DropdownMunicipality from "../components/DropdownMunicipality";
 import { saveUserToFirestore } from "../firebase/firebase";
+import { getAuth, fetchSignInMethodsForEmail, createUserWithEmailAndPassword,sendEmailVerification } from "firebase/auth";
+
+
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -28,6 +31,7 @@ const RegisterScreen = () => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [municipality, setMunicipality] = useState("");
+  
 
 
   const validateFields = () => {
@@ -65,12 +69,21 @@ const RegisterScreen = () => {
     if (!validateFields()) return;
   
     setLoading(true);
+    const auth = getAuth(); // Dohvatanje Firebase Auth instance
   
     try {
-      // 🔐 Registracija korisnika preko Firebase Auth
-      const userCredential = await registerUser(email, password);
-      const user = userCredential.user;
+      // 🔎 Provera da li email već postoji
+      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      if (signInMethods.length > 0) {
+        Alert.alert("Greška", "Email je već registrovan. Pokušajte sa drugim emailom.");
+        setLoading(false);
+        return;
+      }
   
+      // 🔐 Registracija korisnika preko Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      await sendEmailVerification(user);
       // 💾 Snimanje korisnika u Firestore bazu
       await saveUserToFirestore(
         user.uid,
@@ -107,11 +120,18 @@ const RegisterScreen = () => {
       setMunicipality("");
       setAgreed(false);
     } catch (error) {
-      Alert.alert("Greška pri registraciji", error.message);
+      // 🛑 Prilagođena obrada grešaka
+      if (error.code === "auth/email-already-in-use") {
+        Alert.alert("Greška", "Email je već registrovan. Pokušajte sa drugim emailom.");
+      } else {
+        Alert.alert("Greška pri registraciji", error.message);
+      }
     } finally {
       setLoading(false);
     }
   };
+  
+  
 
 
   const pickImage = async () => {

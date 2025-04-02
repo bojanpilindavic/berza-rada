@@ -3,13 +3,28 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert 
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
+import { db } from "../firebase/firebaseConfig";  // Prilagodi putanju prema tvom projektu
+import { collection, addDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
-const ApplyScreen = () => {
+
+const ApplyScreen = ({ route }) => {
+  const { jobId } = route.params;  // Dobijanje ID-ja oglasa iz rute
+  const { uid } = route.params.uid;  
+  const employerId  = route.params.employer;  
+
+  
+  console.log("uido",uid)
+  console.log("poslo",route.params.employer)
+
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState(""); // Nije obavezno
   const [cv, setCV] = useState(null);
+  const [loading, setLoading] = useState(false); // Dodavanje loading stanja
 
+  // Funkcija za učitavanje CV-a
   const handleFileUpload = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
@@ -31,14 +46,43 @@ const ApplyScreen = () => {
     }
   };
 
-  const handleSubmit = () => {
+  // Funkcija za slanje prijave na Firebase
+  const handleSubmit = async () => {
     if (!name || !email || !cv) {
       Alert.alert("Greška", "Ime, Email i CV su obavezni!");
       return;
     }
 
-    Alert.alert("Uspešno", "Prijava poslata!");
-    // Ovdje dodati backend logiku
+    setLoading(true);  // Aktiviraj loading
+
+    try {
+      // Dodavanje prijave u Firestore kolekciju "applications"
+      await addDoc(collection(db, "applications"), {
+        name,
+        email,
+        message,
+        cvName: cv.name,  // Čuvanje imena CV datoteke
+        cvUri: cv.uri,    // Čuvanje URI-a za CV
+        jobId,            // Dodavanje ID-ja oglasa
+        appliedAt: new Date(),
+        uid : uid,
+        employerId
+        
+      });
+
+      setLoading(false);
+      Alert.alert("Uspešno", "Vaša prijava je uspešno poslata!");
+
+      // Resetovanje polja nakon slanja prijave
+      setName("");
+      setEmail("");
+      setMessage("");
+      setCV(null);
+
+    } catch (error) {
+      setLoading(false);
+      Alert.alert("Greška", "Došlo je do greške pri slanju prijave. Pokušajte ponovo.");
+    }
   };
 
   return (
@@ -76,8 +120,14 @@ const ApplyScreen = () => {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitText}>Prijavi se</Text>
+      <TouchableOpacity 
+        style={styles.submitButton} 
+        onPress={handleSubmit} 
+        disabled={loading}  // Onemogući dugme dok traje slanje
+      >
+        <Text style={styles.submitText}>
+          {loading ? "Slanje..." : "Prijavi se"}
+        </Text>
       </TouchableOpacity>
     </View>
   );

@@ -1,27 +1,46 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { getAuth } from "firebase/auth";
 
 const JobDetailsScreen = ({ route, navigation }) => {
   const { job } = route.params;
   const auth = getAuth();
-  const user = auth.currentUser; // Provera da li je korisnik prijavljen
+  const user = auth.currentUser;
+  console.log("posooo",job.userId)
+  const employer = job.userId
+
 
   return (
-    <View style={styles.container}>
-      <Image source={{ uri: job.logo }} style={styles.logo} />
-      <Text style={styles.firma}>{job.firma}</Text>
-      <Text style={styles.pozicija}>{job.position}</Text>
-      <Text style={styles.opstina}>📍 {job.location}</Text>
-      <Text style={styles.konkurs}>⏳ Konkurs otvoren do: {job.deadline}</Text>
-      <Text style={styles.brojPozicija}>👥 Broj pozicija: {job.numberPosition}</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      {/* Logo ako postoji */}
+      {job.logo && (
+        <Image source={{ uri: job.logo }} style={styles.logo} />
+      )}
       
-      {/* Dugme za prijavu */}
+      <Text style={styles.company}>{job.companyName}</Text>
+      <Text style={styles.position}>{job.position}</Text>
+      <Text style={styles.location}>📍 {job.municipality}</Text>
+      <Text style={styles.deadline}>⏳ Konkurs otvoren do: {job.endDate}</Text>
+      <Text style={styles.positions}>👥 Broj pozicija: {job.numberOfPositions}</Text>
+
+      <View style={styles.separator} />
+
+      <Text style={styles.sectionTitle}>Opis posla</Text>
+      <Text style={styles.text}>{job.description || "Opis nije unesen."}</Text>
+
+      <Text style={styles.sectionTitle}>Uslovi</Text>
+      <Text style={styles.text}>{job.conditions || "Uslovi nisu navedeni."}</Text>
+
       <TouchableOpacity
         style={styles.applyButton}
         onPress={() => {
           if (user) {
-            navigation.navigate("ApplyScreen", { job });
+            //navigation.navigate("ApplyScreen", { job });
+            navigation.navigate('ApplyScreen', {
+              jobId: job.id,
+              uid:user,
+              employer
+            });
           } else {
             navigation.navigate("LoginScreen");
           }
@@ -29,46 +48,66 @@ const JobDetailsScreen = ({ route, navigation }) => {
       >
         <Text style={styles.applyButtonText}>Prijavi se</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
-    alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: "#fff",
   },
   logo: {
     width: 120,
     height: 120,
-    marginBottom: 10,
-    objectFit: "contain",
+    alignSelf: "center",
+    marginBottom: 15,
+    borderRadius: 8,
   },
-  firma: {
-    fontSize: 18,
+  company: {
+    fontSize: 20,
     fontWeight: "bold",
+    textAlign: "center",
   },
-  pozicija: {
-    fontSize: 16,
+  position: {
+    fontSize: 18,
     color: "gray",
+    textAlign: "center",
+    marginBottom: 10,
   },
-  opstina: {
+  location: {
+    textAlign: "center",
     marginTop: 5,
   },
-  konkurs: {
+  deadline: {
+    textAlign: "center",
     marginTop: 5,
   },
-  brojPozicija: {
+  positions: {
+    textAlign: "center",
     marginTop: 5,
+    marginBottom: 10,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: "#ccc",
+    marginVertical: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  text: {
+    fontSize: 15,
+    color: "#333",
+    marginBottom: 15,
   },
   applyButton: {
     marginTop: 20,
-    padding: 12,
+    padding: 14,
     backgroundColor: "#007bff",
-    borderRadius: 8,
-    width: "80%",
+    borderRadius: 10,
     alignItems: "center",
   },
   applyButtonText: {
@@ -79,3 +118,4 @@ const styles = StyleSheet.create({
 });
 
 export default JobDetailsScreen;
+

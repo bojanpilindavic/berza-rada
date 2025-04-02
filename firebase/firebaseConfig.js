@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore"; // 👈 Dodaj ovo
 
 const firebaseConfig = {
   apiKey: "AIzaSyBXCv95kWUiesR-AEMNcpXDS0ac_ZtS4ag",
@@ -11,10 +12,9 @@ const firebaseConfig = {
   measurementId: "G-E47F0GS61M",
 };
 
-// Inicijalizacija Firebase aplikacije
 const app = initializeApp(firebaseConfig);
 
-// Inicijalizacija Firebase autentifikacije
 const auth = getAuth(app);
+const db = getFirestore(app); 
 
-export { app, auth };
+export { app, auth, db }; 

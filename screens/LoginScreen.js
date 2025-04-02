@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 
 const LoginScreen = () => {
@@ -52,6 +52,25 @@ const LoginScreen = () => {
       });
   };
 
+  const handleForgotPassword = () => {
+    if (!email) {
+      Alert.alert("Greška", "Molimo unesite email adresu pre nego što resetujete šifru.");
+      return;
+    }
+
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        Alert.alert("Uspešno", "Link za resetovanje šifre je poslat na vaš email.");
+      })
+      .catch((error) => {
+        let message = "Došlo je do greške. Pokušajte ponovo.";
+        if (error.code === "auth/user-not-found") {
+          message = "Nije pronađen korisnik sa ovom email adresom.";
+        }
+        Alert.alert("Greška", message);
+      });
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Prijava</Text>
@@ -75,6 +94,10 @@ const LoginScreen = () => {
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Prijavi se</Text>}
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={handleForgotPassword}>
+        <Text style={styles.forgotPassword}>Zaboravljena šifra?</Text>
       </TouchableOpacity>
 
       <Text style={styles.registerText}>Nemate nalog?</Text>
@@ -123,6 +146,11 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     marginBottom: 10,
+  },
+  forgotPassword: {
+    marginTop: 10,
+    color: "blue",
+    fontWeight: "bold",
   },
   registerText: {
     marginTop: 15,

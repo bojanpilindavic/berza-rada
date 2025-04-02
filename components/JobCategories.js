@@ -1,6 +1,13 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const categories = [
   { id: 1, name: "Turizam i ugostiteljstvo", icon: "restaurant-outline" },
@@ -12,10 +19,24 @@ const categories = [
 ];
 
 const JobCategories = () => {
+  const navigation = useNavigation();
+
+  const handleCategoryPress = (categoryName) => {
+    navigation.navigate("CategoryJobsScreen", { category: categoryName });
+  };
+
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.scrollContainer}
+    >
       {categories.map((category) => (
-        <TouchableOpacity key={category.id} style={styles.category}>
+        <TouchableOpacity
+          key={category.id}
+          style={styles.category}
+          onPress={() => handleCategoryPress(category.name)}
+        >
           <Ionicons name={category.icon} size={30} color="black" />
           <Text style={styles.text}>{category.name}</Text>
         </TouchableOpacity>

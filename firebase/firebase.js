@@ -1,7 +1,5 @@
-import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
-
-const db = getFirestore();
-
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "./firebaseConfig";
 export const saveUserToFirestore = async (uid, userType, data, imageURL = null) => {
   const userData = {
     uid,
@@ -22,7 +20,6 @@ export const saveUserToFirestore = async (uid, userType, data, imageURL = null) 
   }
 
   try {
-    // Ispravno korišćenje doc() za kreiranje DocumentReference
     await setDoc(doc(db, "users", uid), userData);
     console.log("✅ Korisnik uspešno sačuvan u Firestore");
   } catch (error) {

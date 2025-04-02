@@ -1,62 +1,93 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-
-
-const oglasi = [
-  {
-    id: 1,
-    company: "EURO PART",
-    position: "Radnik u magacinu",
-    location: "Istočno Novo Sarajevo",
-    deadline: "30.03.2025",
-    numberPosition: 3,
-    logo: "https://s19538.pcdn.co/wp-content/uploads/2021/08/europart.jpg",
-    description : "Opis posla: Tražimo odgovornu i motivisanu osobu za poziciju prodavca kamionskih delova u našem preduzeću. Idealni kandidat će biti zadužen za prodaju, savetovanje kupaca, kao i za obezbeđivanje da se potrebni delovi brzo i efikasno dostave kupcima."
-  },
-  {
-    id: 2,
-    company: "XYZ Transport",
-    position: "Vozač kamiona",
-    location: "Pale",
-    deadline: "15.04.2025",
-    numberPosition: 2,
-    logo: "https://monti-doo.com/Images/Makers/2201571228116-0.jpeg"
-  },
-  {
-    id: 3,
-    company: "IT Solutions",
-    position: "Programer",
-    location: "Istočna Ilidža",
-    deadline: "10.04.2025",
-    numberPosition: 1,
-    logo: "https://via.placeholder.com/50"
-  }
-];
+import { collection, getDocs, query, orderBy, limit, startAfter } from "firebase/firestore";
+import { db } from "../firebase/firebaseConfig";
 
 const NajnovijiOglasi = () => {
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
+  const [oglasi, setOglasi] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [lastVisible, setLastVisible] = useState(null);  // Čuva poslednji učitani oglas
+  const [loadingMore, setLoadingMore] = useState(false);  // Za loading indikator kad se učitava još
+
+  const fetchJobs = async (pagination) => {
+    try {
+      let q = query(collection(db, "jobs"), orderBy("createdAt", "desc"), limit(7));  // Prvih 7 oglasa
+      if (pagination && lastVisible) {
+        q = query(collection(db, "jobs"), orderBy("createdAt", "desc"), startAfter(lastVisible), limit(7));
+      }
+      
+      const querySnapshot = await getDocs(q);
+      const jobsData = [];
+      querySnapshot.forEach((doc) => {
+        jobsData.push({ id: doc.id, ...doc.data() });
+      });
+
+      if (pagination) {
+        setOglasi((prevOglasi) => [...prevOglasi, ...jobsData]);
+      } else {
+        setOglasi(jobsData);
+      }
+
+      // Čuvanje poslednjeg vidljivog dokumenta za paginaciju
+      const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+      setLastVisible(lastVisibleDoc);
+    } catch (error) {
+      console.error("❌ Greška prilikom preuzimanja oglasa:", error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs(); // Poziv za učitavanje prvih 7 oglasa
+  }, []);
+
+  const loadMore = () => {
+    setLoadingMore(true);
+    fetchJobs(true); // Poziv za učitavanje sledećih 7 oglasa
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Učitavanje oglasa...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Najnoviji oglasi</Text>
       <ScrollView>
         {oglasi.map((oglas) => (
-          <TouchableOpacity 
-          key={oglas.id} 
-          style={styles.card} 
-          onPress={() => navigation.navigate("JobDetailsScreen", { job: oglas })} // Klik vodi na detalje oglasa
-        >
+          <TouchableOpacity
+            key={oglas.id}
+            style={styles.card}
+            onPress={() => navigation.navigate("JobDetailsScreen", { job: oglas })}
+          >
             <View style={styles.cardHeader}>
-              <Text style={styles.firma}>{oglas.company}</Text>
-              <Image source={{ uri: oglas.logo }} style={styles.logo} />
+              <Text style={styles.firma}>{oglas.companyName}</Text>
+              {oglas.logo && <Image source={{ uri: oglas.logo }} style={styles.logo} />}
             </View>
             <Text style={styles.position}>{oglas.position}</Text>
-            <Text style={styles.location}>📍 {oglas.location}</Text>
-            <Text style={styles.deadline}>⏳ Konkurs otvoren do: {oglas.deadline}</Text>
-            <Text style={styles.numberPosition}>👥 Broj slobodnih pozicija: {oglas.numberPosition}</Text>
-          
+            <Text style={styles.location}>📍 {oglas.municipality}</Text>
+            <Text style={styles.deadline}>⏳ Konkurs otvoren do: {oglas.endDate}</Text>
+            <Text style={styles.numberPosition}>👥 Broj slobodnih pozicija: {oglas.numberOfPositions}</Text>
           </TouchableOpacity>
         ))}
+        {loadingMore && (
+          <ActivityIndicator size="large" color="#add8e6" style={{ marginTop: 20 }} />     
+
+        )}
+        {!loadingMore && lastVisible && (
+          <TouchableOpacity onPress={loadMore} style={styles.loadMoreButton}>
+            <Text style={styles.loadMoreText}>Učitaj još</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
@@ -95,23 +126,23 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
   },
-  pozicija: {
+  position: {
     fontSize: 15,
     fontWeight: "bold",
     color: "#222",
     marginBottom: 5,
   },
-  opstina: {
+  location: {
     fontSize: 14,
     color: "#555",
     marginBottom: 3,
   },
-  konkurs: {
+  deadline: {
     fontSize: 13,
     color: "#777",
     marginBottom: 3,
   },
-  brojPozicija: {
+  numberPosition: {
     fontSize: 13,
     color: "#777",
     marginBottom: 10,
@@ -122,15 +153,23 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     objectFit: 'contain',
   },
-  button: {
+  loadMoreButton: {
     backgroundColor: "#add8e6",
+
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 6,
     alignItems: "center",
+    marginBottom: 40,
   },
-  buttonText: {
+  loadMoreText: {
     fontWeight: "bold",
     color: "#000",
+    
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
