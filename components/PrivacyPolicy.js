@@ -8,48 +8,47 @@ const PrivacyPolicy = () => {
 
       <Text style={styles.subtitle}>1. Uvod</Text>
       <Text style={styles.text}>
-        Ova aplikacija prikuplja određene podatke korisnika kako bi poboljšala
-        korisničko iskustvo. Vaši podaci neće biti deljeni sa trećim licima
-        bez vašeg pristanka.
+        Ova aplikacija prikuplja određene podatke korisnika u svrhu omogućavanja funkcionalnosti i poboljšanja korisničkog iskustva. Vaši podaci neće biti deljeni sa trećim licima bez vašeg pristanka, osim ako to zakon zahteva.
       </Text>
 
       <Text style={styles.subtitle}>2. Podaci koji se prikupljaju</Text>
       <Text style={styles.text}>
-        Prikupljamo informacije kao što su ime, email adresa i podaci vezani za
-        oglase koje kreirate ili na koje se prijavljujete.
+        Prikupljamo podatke koje korisnici sami unesu prilikom korišćenja aplikacije, uključujući ime, email adresu, tip korisnika (poslodavac ili tražilac posla), poruke, kao i dokumente kao što su biografije (CV) koje korisnici otpremaju.
       </Text>
 
-      <Text style={styles.subtitle}>3. Kako koristimo vaše podatke</Text>
+      <Text style={styles.subtitle}>3. Način prikupljanja i čuvanja podataka</Text>
       <Text style={styles.text}>
-        Podaci koji se prikupljaju koriste se isključivo u svrhu poboljšanja
-        funkcionalnosti aplikacije i vašeg korisničkog iskustva. Nikada nećemo
-        deliti vaše podatke sa trećim stranama bez vašeg izričitog pristanka.
+        Podaci se prikupljaju isključivo putem formulara unutar aplikacije i čuvaju se u okviru Firebase servisa (Firestore i Firebase Storage). Firebase je bezbedna platforma koja koristi enkripciju i druge sigurnosne standarde.
       </Text>
 
-      <Text style={styles.subtitle}>4. Sigurnost podataka</Text>
+      <Text style={styles.subtitle}>4. Kako koristimo vaše podatke</Text>
       <Text style={styles.text}>
-        Vaši podaci će biti zaštićeni na odgovarajući način kako bi se
-        sprečila neovlašćena upotreba ili pristup. Preduzimamo sve
-        tehničke i organizacione mere kako bismo obezbedili sigurnost vaših
-        podataka.
+        Vaši podaci se koriste za povezivanje poslodavaca i tražilaca posla, prikazivanje oglasa, omogućavanje prijava na oglase i prikaz informacija unutar korisničkog profila. CV dokumenti su dostupni samo poslodavcima na čije oglase se korisnik prijavi.
       </Text>
 
-      <Text style={styles.subtitle}>5. Prava korisnika</Text>
+      <Text style={styles.subtitle}>5. Sigurnost podataka</Text>
       <Text style={styles.text}>
-        Kao korisnik imate pravo da zahtevate pristup, ispravku, ili brisanje
-        svojih ličnih podataka u svakom trenutku. Kontaktirajte nas putem
-        kontakt forme u aplikaciji za više informacija.
+        Primenićemo sve razumno potrebne tehničke i organizacione mere kako bismo zaštitili vaše podatke od neovlašćenog pristupa, otkrivanja ili zloupotrebe.
       </Text>
 
+      <Text style={styles.subtitle}>6. Prava korisnika</Text>
       <Text style={styles.text}>
-        Korišćenjem ove aplikacije, pristajete na uslove naše politike
-        privatnosti.
+        U svakom trenutku imate pravo da zatražite uvid, ispravku ili brisanje svojih podataka. Kontaktirajte nas putem opcije "Kontakt" u aplikaciji ili putem email adrese dostupne u sekciji pomoći.
+      </Text>
+
+      <Text style={styles.subtitle}>7. Maloletni korisnici</Text>
+      <Text style={styles.text}>
+        Aplikacija nije namenjena osobama mlađim od 16 godina. Ne prikupljamo svesno podatke od maloletnih lica. Ako verujete da je dete dostavilo lične podatke, molimo vas da nas kontaktirate kako bismo uklonili te podatke.
+      </Text>
+
+      <Text style={styles.subtitle}>8. Saglasnost</Text>
+      <Text style={styles.text}>
+        Korišćenjem ove aplikacije, pristajete na uslove ove politike privatnosti. Zadržavamo pravo izmene ove politike, o čemu ćete biti blagovremeno obavešteni putem aplikacije.
       </Text>
     </ScrollView>
   );
 };
 
-// 📌 **STILOVI**
 const styles = {
   container: {
     padding: 20,

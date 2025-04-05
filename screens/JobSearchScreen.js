@@ -1,10 +1,8 @@
 import { db } from "../firebase/firebaseConfig";
-
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { collection, getDocs } from "firebase/firestore";
-import { useNavigation } from "@react-navigation/native";
 
 const JobScreen = () => {
   const route = useRoute();
@@ -20,7 +18,6 @@ const JobScreen = () => {
         const snapshot = await getDocs(jobsRef);
         const allJobs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-        // Filtriranje oglasa uz provere da li postoje potrebna polja
         const filteredJobs = allJobs.filter(
           (job) =>
             job.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -30,7 +27,7 @@ const JobScreen = () => {
 
         setJobs(filteredJobs);
       } catch (error) {
-        console.error("Error fetching jobs:", error);
+        console.error("Greška pri učitavanju poslova:", error);
       }
     };
 
@@ -47,13 +44,20 @@ const JobScreen = () => {
           data={jobs}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card}>
-              <Text style={styles.jobTitle}>{item.position || "Nepoznata pozicija"}</Text>
-              <Text style={styles.company}>{item.companyName || "Nepoznata firma"}</Text>
-              <Text style={styles.description} numberOfLines={2}>
-                {item.description || "Nema opisa"}
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.firma}>{item.companyName || "Nepoznata firma"}</Text>
+                {item.logo && <Image source={{ uri: item.logo }} style={styles.logo} />}
+              </View>
+              <Text style={styles.position}>{item.position || "Nepoznata pozicija"}</Text>
+              <Text style={styles.location}>📍 {item.municipality || "Nepoznata lokacija"}</Text>
+              <Text style={styles.deadline}>⏳ Konkurs otvoren do: {item.endDate}</Text>
+              <Text style={styles.numberPosition}>
+                👥 Broj slobodnih pozicija: {item.numberOfPositions || "Nepoznato"}
               </Text>
-              <Text style={styles.location}>{item.municipality || "Nepoznata lokacija"}</Text>
             </TouchableOpacity>
           )}
         />
@@ -63,24 +67,70 @@ const JobScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 10 },
-  title: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  noResults: { textAlign: "center", fontSize: 16, color: "gray" },
+  container: {
+    paddingHorizontal: 10,
+    marginTop: 20,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  noResults: {
+    textAlign: "center",
+    fontSize: 16,
+    color: "gray",
+  },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f8f9fa",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
   },
-  jobTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
-  company: { fontSize: 14, color: "#666", marginBottom: 5 },
-  description: { fontSize: 14, color: "#333", marginBottom: 5 },
-  location: { fontSize: 12, color: "#007bff", fontWeight: "bold" },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  firma: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  position: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#222",
+    marginBottom: 5,
+  },
+  location: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 3,
+  },
+  deadline: {
+    fontSize: 13,
+    color: "#777",
+    marginBottom: 3,
+  },
+  numberPosition: {
+    fontSize: 13,
+    color: "#777",
+    marginBottom: 10,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    objectFit: "contain",
+  },
 });
 
 export default JobScreen;

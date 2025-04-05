@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { collection, query, where, getDocs, getFirestore } from "firebase/firestore";
@@ -45,12 +46,19 @@ const MunicipalityJobScreen = () => {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.jobItem}
+      style={styles.card}
       onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
     >
-      <Text style={styles.jobTitle}>{item.position}</Text>
-      <Text style={styles.companyName}>{item.companyName}</Text>
-      <Text style={styles.category}>{item.category}</Text>
+      <View style={styles.cardHeader}>
+        <Text style={styles.firma}>{item.companyName || "Nepoznata firma"}</Text>
+        {item.logo && <Image source={{ uri: item.logo }} style={styles.logo} />}
+      </View>
+      <Text style={styles.position}>{item.position || "Nepoznata pozicija"}</Text>
+      <Text style={styles.category}>📂 Kategorija: {item.category || "Nepoznato"}</Text>
+      <Text style={styles.deadline}>⏳ Konkurs otvoren do: {item.endDate || "Nepoznato"}</Text>
+      <Text style={styles.numberPosition}>
+        👥 Broj slobodnih pozicija: {item.numberOfPositions || "Nepoznato"}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -78,38 +86,74 @@ const MunicipalityJobScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    paddingHorizontal: 10,
+    marginTop: 20,
     flex: 1,
-    padding: 16,
     backgroundColor: "#fff",
   },
   header: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  jobItem: {
-    padding: 16,
-    backgroundColor: "#f2f2f2",
-    borderRadius: 10,
-    marginBottom: 12,
-  },
-  jobTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
-  },
-  companyName: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  category: {
-    fontSize: 13,
-    marginTop: 2,
-    color: "gray",
+    marginBottom: 10,
+    textAlign: "center",
   },
   noJobsText: {
     marginTop: 20,
     textAlign: "center",
     fontSize: 16,
     color: "gray",
+  },
+  card: {
+    backgroundColor: "#f8f9fa",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  firma: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    flex: 1,
+    flexWrap: "wrap",
+    paddingRight: 10,
+  },
+  position: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#222",
+    marginBottom: 5,
+  },
+  category: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 3,
+  },
+  deadline: {
+    fontSize: 13,
+    color: "#777",
+    marginBottom: 3,
+  },
+  numberPosition: {
+    fontSize: 13,
+    color: "#777",
+    marginBottom: 10,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    objectFit: "contain",
   },
 });
 

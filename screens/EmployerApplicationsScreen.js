@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, Linking } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  StyleSheet,
+  Linking,
+} from "react-native";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
-import * as WebBrowser from 'expo-web-browser';
-
-const openCV = (uri) => {
-  WebBrowser.openBrowserAsync(uri).catch(err => console.error("Greška pri otvaranju CV-a", err));
-};
-
 
 const EmployerApplicationsScreen = () => {
   const [applications, setApplications] = useState([]);
@@ -21,33 +22,32 @@ const EmployerApplicationsScreen = () => {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
 
-        // 📌 Prvo dohvati sve oglase koje je objavio poslodavac
         const jobsQuery = query(
           collection(db, "jobs"),
-          where("userId", "==", currentUser.uid) // 🔥 Pronalaženje poslova poslodavca
+          where("userId", "==", currentUser.uid)
         );
-        
+
         const jobsSnapshot = await getDocs(jobsQuery);
-
         const jobIds = jobsSnapshot.docs.map((doc) => doc.id);
-        console.log("bog te jebo",jobIds)
-
 
         if (jobIds.length === 0) {
-          setApplications([]); // Poslodavac nema oglase, nema ni prijava
+          setApplications([]);
           setLoading(false);
           return;
         }
 
-        // 📌 Sada dohvati prijave koje su podnete na ove oglase
         const appsQuery = query(
           collection(db, "applications"),
-          where("employerId", "==", currentUser.uid) // 🔥 Filtriramo prijave po employerId
+          where("employerId", "==", currentUser.uid)
         );
 
         const appsSnapshot = await getDocs(appsQuery);
 
-        const data = appsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const data = appsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
         setApplications(data);
       } catch (error) {
         console.error("Greška pri dohvatanju prijava:", error);
@@ -55,35 +55,44 @@ const EmployerApplicationsScreen = () => {
         setLoading(false);
       }
     };
-    
-    
 
     fetchApplications();
   }, []);
 
-  if (loading) {
-    return <ActivityIndicator size="large" style={{ marginTop: 20 }} />;
-  }
-
   const openCV = (uri) => {
-    Linking.openURL(uri).catch(err => console.error("Greška pri otvaranju CV-a", err));
+    Linking.openURL(uri).catch((err) =>
+      console.error("Greška pri otvaranju CV-a", err)
+    );
   };
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Prijave na vaše oglase</Text>
+      <Text style={styles.header}>Prijave na vaše oglase</Text>
       {applications.length === 0 ? (
-        <Text style={styles.empty}>Nema prijava.</Text>
+        <Text style={styles.noAppsText}>Nema prijava.</Text>
       ) : (
         <FlatList
           data={applications}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text>{item.email}</Text>
-              <Text>{item.message || "Bez poruke"}</Text>
-              <Text style={styles.cv} onPress={() => openCV(item.cvUri)}>📄 {item.cvName}</Text>
+              <Text style={styles.applicantName}>👤 {item.name}</Text>
+              <Text style={styles.email}>📧 {item.email}</Text>
+              <Text style={styles.message}>
+                💬 Poruka: {item.message || "Bez poruke"}
+              </Text>
+              <Text style={styles.cv} onPress={() => openCV(item.cvUri)}>
+                📎 CV: {item.cvName || "Nema naziva"}
+              </Text>
             </View>
           )}
         />
@@ -94,34 +103,61 @@ const EmployerApplicationsScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    paddingHorizontal: 10,
+    marginTop: 20,
     flex: 1,
-    padding: 16,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
-  title: {
-    fontSize: 20,
+  header: {
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 12
-  },
-  empty: {
+    marginBottom: 16,
     textAlign: "center",
-    marginTop: 50,
-    color: "gray"
   },
   card: {
-    padding: 14,
+    backgroundColor: "#f8f9fa",
+    padding: 15,
     borderRadius: 10,
-    backgroundColor: "#f2f2f2",
-    marginBottom: 10
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  name: {
+  applicantName: {
     fontSize: 16,
-    fontWeight: "bold"
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 4,
+  },
+  email: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 4,
+  },
+  message: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 4,
   },
   cv: {
+    fontSize: 14,
     color: "#007bff",
-    marginTop: 5
-  }
+    marginTop: 4,
+    textDecorationLine: "underline",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noAppsText: {
+    fontSize: 16,
+    color: "gray",
+    textAlign: "center",
+    marginTop: 30,
+  },
 });
 
 export default EmployerApplicationsScreen;

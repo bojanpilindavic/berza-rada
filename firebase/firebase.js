@@ -26,3 +26,4 @@ export const saveUserToFirestore = async (uid, userType, data, imageURL = null) 
     console.error("❌ Greška prilikom snimanja korisnika:", error);
   }
 };
+
