@@ -69,7 +69,7 @@ const MunicipalityJobScreen = () => {
       </Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" color="#5B8DB8" style={{ marginTop: 20 }} />
       ) : jobs.length === 0 ? (
         <Text style={styles.noJobsText}>Nema oglasa za ovu opštinu.</Text>
       ) : (
@@ -77,7 +77,7 @@ const MunicipalityJobScreen = () => {
           data={jobs}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 40 }}
         />
       )}
     </View>
@@ -89,28 +89,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginTop: 20,
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F0F0F0",
   },
   header: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
+    color: "#274E6D",
   },
   noJobsText: {
     marginTop: 20,
     textAlign: "center",
     fontSize: 16,
-    color: "gray",
+    color: "#555",
   },
   card: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#FFFFE3",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
-    shadowColor: "#000",
+    shadowColor: "#5B8DB8",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
   firma: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
+    color: "#274E6D",
     flex: 1,
     flexWrap: "wrap",
     paddingRight: 10,
@@ -131,29 +132,29 @@ const styles = StyleSheet.create({
   position: {
     fontSize: 15,
     fontWeight: "bold",
-    color: "#222",
+    color: "#274E6D",
     marginBottom: 5,
   },
   category: {
     fontSize: 14,
-    color: "#555",
+    color: "#5B8DB8",
     marginBottom: 3,
   },
   deadline: {
     fontSize: 13,
-    color: "#777",
+    color: "#5B8DB8",
     marginBottom: 3,
   },
   numberPosition: {
     fontSize: 13,
-    color: "#777",
+    color: "#5B8DB8",
     marginBottom: 10,
   },
   logo: {
     width: 80,
     height: 80,
     borderRadius: 10,
-    objectFit: "contain",
+    resizeMode: "contain",
   },
 });
 

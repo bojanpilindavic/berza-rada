@@ -65,30 +65,33 @@ const Header = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Image source={require("../assets/header.png")} style={styles.image} />
 
       {/* PRVI RED: Hamburger meni + Naziv aplikacije + Ikone */}
       <View style={styles.topContainer}>
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Ionicons name="menu" size={30} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.logo}>BERZA RADA</Text>
-        <View style={styles.iconsContainer}>
-          <TouchableOpacity>
-            <Ionicons name="heart-outline" size={24} color="black" />
-          </TouchableOpacity>
+  <TouchableOpacity onPress={() => setMenuVisible(true)}>
+    <Ionicons name="menu" size={30} color="black" />
+  </TouchableOpacity>
 
-          {user ? (
-            <TouchableOpacity onPress={() => setProfileMenuVisible(true)}>
-              <Ionicons name="person-circle-outline" size={30} color="black" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => navigation.navigate("LoginScreen")}>
-              <Ionicons name="log-in-outline" size={24} color="black" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+  <View style={{ flex: 1, alignItems: "center", maxHeight: 100 }}>
+    <Image source={require("../assets/headert.png")} style={styles.headerLogo} />
+  </View>
+
+  <View style={styles.iconsContainer}>
+    <TouchableOpacity>
+      <Ionicons name="heart-outline" size={24} color="black"  onPress={() => navigation.navigate("MyJobScreen")}/>
+    </TouchableOpacity>
+    {user ? (
+      <TouchableOpacity onPress={() => setProfileMenuVisible(true)}>
+        <Ionicons name="person-circle-outline" size={30} color="black" />
+      </TouchableOpacity>
+    ) : (
+      <TouchableOpacity onPress={() => navigation.navigate("LoginScreen")}>
+        <Ionicons name="log-in-outline" size={24} color="black" />
+      </TouchableOpacity>
+    )}
+  </View>
+</View>
+
       {/* DRUGI RED: Search bar + Objavi oglas */}
       <View style={styles.bottomContainer}>
         <View
@@ -233,23 +236,31 @@ const Header = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: "#fff",
+    backgroundColor: '#A8E6CF',
     paddingBottom: 10,
+    paddingTop: -50,         // ← ovo uklanja gornji padding
+    marginTop: -10,          // ← ovo osigurava da nema dodatnog margina iznad
   },
   topContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 0,
   },
-  logo: {
-    fontSize: 22,
-    fontWeight: "bold",
+
+  headerLogo: {
+    width: 150,
+    height: 100,
+    resizeMode: "contain",
+    marginHorizontal: 10,
   },
+  
+
   iconsContainer: {
     flexDirection: "row",
-    gap: 15,
+    gap: 10, // smanjen razmak
+    alignItems: "center",
   },
   bottomContainer: {
     flexDirection: "row",
@@ -272,7 +283,9 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   button: {
-    backgroundColor: "#add8e6",
+    backgroundColor: "#5B8DB8"
+    ,
+
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 5,
@@ -280,7 +293,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontWeight: "bold",
-    color: "#000",
+    color: "#FFFFFF",
   },
   modalContainer: {
     flex: 1,

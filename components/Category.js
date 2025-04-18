@@ -45,7 +45,7 @@ export default function Category({ selected, onSelect }) {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 10,
-    zIndex: 999, // da bude iznad svega
+    zIndex: 999, 
   },
   dropdown: {
     borderWidth: 1,

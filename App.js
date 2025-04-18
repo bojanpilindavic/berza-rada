@@ -16,6 +16,7 @@ import CategoryJobsScreen from "./screens/CategoryJobsScreen";
 import MunicipalityJobScreen from "./screens/MunicipalityJobScreen";
 import JobSearchScreen from "./screens/JobSearchScreen";
 import SplashScreen from "./screens/SplashScreen";
+import MyJobScreen from "./screens/MyJobScreen";
 
 const Stack = createStackNavigator(); // Kreiramo stack navigator
 
@@ -24,19 +25,21 @@ const App = () => {
     <SafeAreaProvider>
       <NavigationContainer>
          <Stack.Navigator initialRouteName="SplashScreen" >
-          <Stack.Screen name="SplashScreen" component={SplashScreen} />
-          <Stack.Screen name="HomeScreen" options={{ title: "Pocetna" }}  component={HomeScreen} />
+          <Stack.Screen name="SplashScreen" options={{ headerShown: false}} component={SplashScreen} />
+          <Stack.Screen name="HomeScreen" options={{ headerShown: false}}  component={HomeScreen} />
           <Stack.Screen name="JobDetailsScreen" options={{ title: "Detalji posla" }}  component={JobDetailsScreen} />
           <Stack.Screen name="ApplyScreen" options={{ title: "Prijava na oglas" }}  component={ApplyScreen} />
           <Stack.Screen name="RegisterScreen" options={{ title: "Registracija" }}  component={RegisterScreen} />
           <Stack.Screen name="LoginScreen" options={{ title: "Prijava" }}  component={LoginScreen} />
-          <Stack.Screen name="ProfileScreen" options={{ title: "ProfileScreen" }}  component={ProfileScreen} />
-          <Stack.Screen name="JobAddScreen" options={{ title: "JobAddScreen" }}  component={JobAddScreen} />
+          <Stack.Screen name="ProfileScreen" options={{ title: "Moj profil" }}  component={ProfileScreen} />
+          <Stack.Screen name="JobAddScreen" options={{ title: "Dodavanje oglasa" }}  component={JobAddScreen} />
           <Stack.Screen name="EmployerApplicationsScreen" options={{ title: "Moje prijave" }}  component={EmployerApplicationsScreen} />
-          <Stack.Screen name="WorkerApplicationsScreen" options={{ title: "Moje prijave na" }}  component={WorkerApplicationsScreen} />
-          <Stack.Screen name="CategoryJobsScreen" options={{ title: "Category" }}  component={CategoryJobsScreen} />
-          <Stack.Screen name="MunicipalityJobScreen" options={{ title: "Category" }}  component={MunicipalityJobScreen} />
-          <Stack.Screen name="JobSearchScreen" options={{ title: "JobSearchScreen" }}  component={JobSearchScreen} />
+          <Stack.Screen name="WorkerApplicationsScreen" options={{ title: "Moje prijave" }}  component={WorkerApplicationsScreen} />
+          <Stack.Screen name="CategoryJobsScreen" options={{ title: "Pretraga" }}  component={CategoryJobsScreen} />
+          <Stack.Screen name="MunicipalityJobScreen" options={{ title: "Pretraga" }}  component={MunicipalityJobScreen} />
+          <Stack.Screen name="JobSearchScreen" options={{ title: "Pretraga" }}  component={JobSearchScreen} />
+          <Stack.Screen name="MyJobScreen" options={{ title: "" }}  component={MyJobScreen} />
+
 
 
 

@@ -1,6 +1,14 @@
 import { db } from "../firebase/firebaseConfig";
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { collection, getDocs } from "firebase/firestore";
 
@@ -8,8 +16,8 @@ const JobScreen = () => {
   const route = useRoute();
   const searchQuery = route.params?.query || "";
   const navigation = useNavigation();
-
   const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -28,6 +36,8 @@ const JobScreen = () => {
         setJobs(filteredJobs);
       } catch (error) {
         console.error("Greška pri učitavanju poslova:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -37,16 +47,24 @@ const JobScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Rezultati pretrage: "{searchQuery}"</Text>
-      {jobs.length === 0 ? (
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#5B8DB8" />
+          <Text style={{ color: "#274E6D", marginTop: 10 }}>Učitavanje...</Text>
+        </View>
+      ) : jobs.length === 0 ? (
         <Text style={styles.noResults}>Nema rezultata.</Text>
       ) : (
         <FlatList
           data={jobs}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 50 }}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
               onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
+              activeOpacity={0.8}
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.firma}>{item.companyName || "Nepoznata firma"}</Text>
@@ -70,26 +88,34 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 10,
     marginTop: 20,
+    backgroundColor: "#F0F0F0",
+    flex: 1,
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
+    color: "#274E6D",
   },
   noResults: {
     textAlign: "center",
     fontSize: 16,
-    color: "gray",
+    color: "#555",
+    marginTop: 40,
+  },
+  loadingContainer: {
+    marginTop: 40,
+    alignItems: "center",
   },
   card: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#FFFFE3",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
-    shadowColor: "#000",
+    shadowColor: "#5B8DB8",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -102,34 +128,34 @@ const styles = StyleSheet.create({
   firma: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
+    color: "#274E6D",
   },
   position: {
     fontSize: 15,
     fontWeight: "bold",
-    color: "#222",
+    color: "#274E6D",
     marginBottom: 5,
   },
   location: {
     fontSize: 14,
-    color: "#555",
+    color: "#5B8DB8",
     marginBottom: 3,
   },
   deadline: {
     fontSize: 13,
-    color: "#777",
+    color: "#5B8DB8",
     marginBottom: 3,
   },
   numberPosition: {
     fontSize: 13,
-    color: "#777",
+    color: "#5B8DB8",
     marginBottom: 10,
   },
   logo: {
     width: 80,
     height: 80,
     borderRadius: 10,
-    objectFit: "contain",
+    resizeMode: "contain",
   },
 });
 

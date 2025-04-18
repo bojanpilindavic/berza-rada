@@ -63,7 +63,7 @@ const WorkerApplicationsScreen = () => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#5B8DB8" />
       </View>
     );
   }
@@ -78,27 +78,24 @@ const WorkerApplicationsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Moje prijave</Text>
+      <Text style={styles.header}>📄 Moje prijave</Text>
       <FlatList
         data={applications}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 20 }}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.jobTitle}>
-              {item.job?.position || "Nepoznat oglas"}
-            </Text>
-            <Text style={styles.company}>
-              Firma: {item.job?.companyName || "Nepoznato"}
-            </Text>
-            <Text style={styles.message}>
-              💬 Poruka: {item.message || "Nema poruke"}
-            </Text>
-            <Text style={styles.cv}>📎 CV: {item.cvName || "Nepoznat fajl"}</Text>
+            <View style={styles.cardHeader}>
+              <Text style={styles.jobTitle}>{item.job?.position || "Nepoznat oglas"}</Text>
+              <Text style={styles.company}>{item.job?.companyName || "Nepoznata firma"}</Text>
+            </View>
+
+            <Text style={styles.detail}>💬 Poruka: {item.message || "Nema poruke"}</Text>
+            <Text style={styles.detail}>📎 CV: {item.cvName || "Nepoznat fajl"}</Text>
             <Text style={styles.date}>
               🕒 Prijavljeno:{" "}
               {item.appliedAt
-                ? new Date(item.appliedAt.seconds * 1000).toLocaleString()
+                ? new Date(item.appliedAt.seconds * 1000).toLocaleString("sr-RS")
                 : "Nepoznat datum"}
             </Text>
           </View>
@@ -110,58 +107,58 @@ const WorkerApplicationsScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
     marginTop: 20,
+    paddingHorizontal: 10,
+    backgroundColor: "#F0F0F0",
     flex: 1,
-    backgroundColor: "#fff",
   },
   header: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 15,
     textAlign: "center",
+    color: "#274E6D",
   },
   card: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#FFFFE3",
     padding: 15,
     borderRadius: 10,
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardHeader: {
+    marginBottom: 8,
   },
   jobTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 6,
+    color: "#274E6D",
   },
   company: {
     fontSize: 14,
     fontStyle: "italic",
-    marginBottom: 6,
-    color: "#444",
+    color: "#5B8DB8",
+    marginTop: 2,
   },
-  message: {
+  detail: {
     fontSize: 14,
-    color: "#555",
-    marginBottom: 4,
-  },
-  cv: {
-    fontSize: 14,
-    color: "#555",
+    color: "#274E6D",
     marginBottom: 4,
   },
   date: {
     fontSize: 13,
     color: "#777",
+    marginTop: 4,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#F0F0F0",
   },
   noAppsText: {
     fontSize: 16,

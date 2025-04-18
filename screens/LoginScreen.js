@@ -1,13 +1,24 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Image,
+} from "react-native";
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
   const auth = getAuth();
 
@@ -73,24 +84,42 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Image source={require("../assets/headerlogo.png")} style={styles.headerLogo} />
       <Text style={styles.title}>Prijava</Text>
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        placeholder="Šifra"
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        secureTextEntry
-      />
+      {/* EMAIL INPUT */}
+      <View style={styles.inputContainer}>
+        <Ionicons name="mail-outline" size={20} color="#555" style={styles.icon} />
+        <TextInput
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          style={styles.inputField}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </View>
+
+      {/* PASSWORD INPUT */}
+      <View style={styles.inputContainer}>
+        <Ionicons name="lock-closed-outline" size={20} color="#555" style={styles.icon} />
+        <TextInput
+          placeholder="Šifra"
+          value={password}
+          onChangeText={setPassword}
+          style={styles.inputField}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+          <Ionicons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={20}
+            color="#555"
+            style={styles.eyeIcon}
+          />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Prijavi se</Text>}
@@ -111,32 +140,52 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#e6f0fa",
+  },
+  headerLogo: {
+    width: 200,
+    height: 220,
+    resizeMode: "contain",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+    color: "#274E6D",
   },
-  input: {
+  inputContainer: {
     width: "100%",
-    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 5,
     marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  inputField: {
+    flex: 1,
+    paddingVertical: 10,
+  },
+  eyeIcon: {
+    marginLeft: 5,
   },
   button: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#5B8DB8",
     padding: 10,
     borderRadius: 5,
     width: "100%",
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
+    marginTop: 5,
   },
   buttonText: {
     color: "#fff",
@@ -149,12 +198,13 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     marginTop: 10,
-    color: "blue",
+    color: "#274E6D",
     fontWeight: "bold",
   },
   registerText: {
     marginTop: 15,
     fontSize: 14,
+    color: "#274E6D",
   },
   registerLink: {
     color: "blue",

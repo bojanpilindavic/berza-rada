@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from "react-native";
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
@@ -23,7 +31,7 @@ const ProfileScreen = () => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           setUserData(data);
-          setEditedData(data); // Postavi i podatke za uređivanje
+          setEditedData(data);
         } else {
           Alert.alert("Greška", "Podaci o korisniku nisu pronađeni.");
         }
@@ -55,12 +63,12 @@ const ProfileScreen = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>👤 Moj profil</Text>
 
-      <Text style={styles.label}>Email:</Text>
-      <Text style={styles.data}>{userData.email}</Text>
+      <Text style={styles.label}>Email</Text>
+      <Text style={styles.valueBox}>{userData.email}</Text>
 
       {userData.userType === "worker" ? (
         <>
-          <Text style={styles.label}>Ime i prezime:</Text>
+          <Text style={styles.label}>Ime i prezime</Text>
           {editing ? (
             <TextInput
               value={editedData.fullName}
@@ -68,10 +76,10 @@ const ProfileScreen = () => {
               style={styles.input}
             />
           ) : (
-            <Text style={styles.data}>{userData.fullName}</Text>
+            <Text style={styles.valueBox}>{userData.fullName}</Text>
           )}
 
-          <Text style={styles.label}>Opština:</Text>
+          <Text style={styles.label}>Opština</Text>
           {editing ? (
             <TextInput
               value={editedData.municipality}
@@ -79,12 +87,12 @@ const ProfileScreen = () => {
               style={styles.input}
             />
           ) : (
-            <Text style={styles.data}>{userData.municipality}</Text>
+            <Text style={styles.valueBox}>{userData.municipality}</Text>
           )}
         </>
       ) : (
         <>
-          <Text style={styles.label}>Naziv firme:</Text>
+          <Text style={styles.label}>Naziv firme</Text>
           {editing ? (
             <TextInput
               value={editedData.companyName}
@@ -92,10 +100,10 @@ const ProfileScreen = () => {
               style={styles.input}
             />
           ) : (
-            <Text style={styles.data}>{userData.companyName}</Text>
+            <Text style={styles.valueBox}>{userData.companyName}</Text>
           )}
 
-          <Text style={styles.label}>JIB:</Text>
+          <Text style={styles.label}>JIB</Text>
           {editing ? (
             <TextInput
               value={editedData.jib}
@@ -103,10 +111,10 @@ const ProfileScreen = () => {
               style={styles.input}
             />
           ) : (
-            <Text style={styles.data}>{userData.jib}</Text>
+            <Text style={styles.valueBox}>{userData.jib}</Text>
           )}
 
-          <Text style={styles.label}>Delatnost:</Text>
+          <Text style={styles.label}>Delatnost</Text>
           {editing ? (
             <TextInput
               value={editedData.activity}
@@ -114,10 +122,10 @@ const ProfileScreen = () => {
               style={styles.input}
             />
           ) : (
-            <Text style={styles.data}>{userData.activity}</Text>
+            <Text style={styles.valueBox}>{userData.activity}</Text>
           )}
 
-          <Text style={styles.label}>Opština:</Text>
+          <Text style={styles.label}>Opština</Text>
           {editing ? (
             <TextInput
               value={editedData.municipality}
@@ -125,7 +133,7 @@ const ProfileScreen = () => {
               style={styles.input}
             />
           ) : (
-            <Text style={styles.data}>{userData.municipality}</Text>
+            <Text style={styles.valueBox}>{userData.municipality}</Text>
           )}
         </>
       )}
@@ -146,50 +154,63 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#F0F0F0",
     flexGrow: 1,
   },
   title: {
     fontSize: 24,
+    color: "#274E6D",
     fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
   },
   label: {
-    fontWeight: "600",
-    marginTop: 10,
+    fontWeight: "bold",
+    color: "#274E6D",
+    marginTop: 12,
+    marginBottom: 4,
+    fontSize: 15,
   },
-  data: {
-    fontSize: 16,
-    marginBottom: 10,
+  valueBox: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 15,
+    color: "#333",
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 10,
-    marginBottom: 10,
     borderRadius: 8,
+    backgroundColor: "#fff",
+    padding: 10,
+    fontSize: 15,
   },
   editButton: {
-    backgroundColor: "#007bff",
-    padding: 12,
+    backgroundColor: "#5B8DB8",
+    padding: 14,
     borderRadius: 8,
-    marginTop: 20,
+    marginTop: 30,
   },
   editButtonText: {
     color: "#fff",
-    textAlign: "center",
     fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 16,
   },
   saveButton: {
     backgroundColor: "#28a745",
-    padding: 12,
+    padding: 14,
     borderRadius: 8,
-    marginTop: 20,
+    marginTop: 30,
   },
   saveButtonText: {
     color: "#fff",
-    textAlign: "center",
     fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 16,
   },
 });
 

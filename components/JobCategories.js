@@ -10,12 +10,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 const categories = [
-  { id: 1, name: "Turizam i ugostiteljstvo", icon: "restaurant-outline" },
-  { id: 2, name: "Tehničke usluge", icon: "construct-outline" },
-  { id: 3, name: "Transport i logistika", icon: "bus-outline" },
-  { id: 4, name: "Prehrambena industrija", icon: "fast-food-outline" },
-  { id: 5, name: "Građevina i geodezija", icon: "business-outline" },
-  { id: 6, name: "Elektrotehnika", icon: "flash-outline" },
+  { id: 1, name: "Turizam i ugostiteljstvo", icon: "restaurant-outline", color: "#274E6D" },
+  { id: 2, name: "Tehničke usluge", icon: "construct-outline", color: "#274E6D" },
+  { id: 3, name: "Transport i logistika", icon: "bus-outline", color: "#274E6D" },
+  { id: 4, name: "Prehrambena industrija", icon: "fast-food-outline", color: "#274E6D" },
+  { id: 5, name: "Građevina i geodezija", icon: "business-outline", color: "#274E6D" },
+  { id: 6, name: "Elektrotehnika", icon: "flash-outline", color: "#274E6D" },
 ];
 
 const JobCategories = () => {
@@ -37,7 +37,11 @@ const JobCategories = () => {
           style={styles.category}
           onPress={() => handleCategoryPress(category.name)}
         >
-          <Ionicons name={category.icon} size={30} color="black" />
+          <Ionicons
+            name={category.icon}
+            size={30}
+            color={category.color || "black"}
+          />
           <Text style={styles.text}>{category.name}</Text>
         </TouchableOpacity>
       ))}
@@ -53,7 +57,7 @@ const styles = StyleSheet.create({
   category: {
     alignItems: "center",
     marginRight: 15,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#F2BAB3",
     padding: 10,
     borderRadius: 10,
     minWidth: 100,
@@ -62,6 +66,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 12,
     textAlign: "center",
+    color: "#274E6D",
   },
 });
 

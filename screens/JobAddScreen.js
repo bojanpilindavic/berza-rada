@@ -17,7 +17,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { auth } from "../firebase/firebaseConfig";
 import DropdownMunicipality from "../components/DropdownMunicipality";
 import Category from "../components/Category";
-
+import { Ionicons } from "@expo/vector-icons";
 
 const AddJobScreen = () => {
   const [companyName, setCompanyName] = useState("");
@@ -29,7 +29,6 @@ const AddJobScreen = () => {
   const [conditions, setConditions] = useState("");
   const [municipality, setMunicipality] = useState("");
   const [category, setCategory] = useState("");
-
   const [loading, setLoading] = useState(false);
 
   const db = getFirestore();
@@ -54,28 +53,25 @@ const AddJobScreen = () => {
   };
 
   const handleAddJob = async () => {
-    // Provera da li su sva polja popunjena
     if (!position || !numberOfPositions || !description || !conditions || !municipality || !endDate) {
       alert("Molimo popunite sva polja.");
       return;
     }
-  
-    // Provera validnosti broja pozicija
+
     const numberOfPositionsInt = parseInt(numberOfPositions);
     if (isNaN(numberOfPositionsInt) || numberOfPositionsInt <= 0) {
       alert("Unesite validan broj pozicija.");
       return;
     }
-  
+
     setLoading(true);
     try {
-      // Formatiraj endDate u ISO format
-      const formattedEndDate = endDate.toLocaleDateString('sr-RS', {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-      });      
-  
+      const formattedEndDate = endDate.toLocaleDateString("sr-RS", {
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+      });
+
       const jobData = {
         companyName,
         position,
@@ -88,11 +84,10 @@ const AddJobScreen = () => {
         createdAt: serverTimestamp(),
         userId: auth.currentUser.uid,
       };
-  
+
       await addDoc(collection(db, "jobs"), jobData);
       alert("✅ Oglas uspešno dodat!");
-  
-      // Reset formi
+
       setPosition("");
       setNumberOfPositions("");
       setDescription("");
@@ -107,81 +102,86 @@ const AddJobScreen = () => {
       setLoading(false);
     }
   };
-  
 
   return (
-    <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-    keyboardVerticalOffset={100} // podešavaš po potrebi da se ne preklapa
-  >
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Naziv firme</Text>
-        <Text style={styles.textValue}>{companyName || "Učitavanje..."}</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Objavi oglas</Text>
 
-        <Text style={styles.label}>Pozicija</Text>
-        <TextInput style={styles.input} value={position} onChangeText={setPosition} placeholder="Pozicija" />
+          <View style={styles.staticField}>
+            <Text style={styles.label}>Naziv firme</Text>
+            <Text style={styles.value}>{companyName || "Učitavanje..."}</Text>
+          </View>
 
-        <Text style={styles.label}>Broj pozicija</Text>
-        <TextInput
-          style={styles.input}
-          value={numberOfPositions}
-          onChangeText={setNumberOfPositions}
-          placeholder="Broj"
-          keyboardType="numeric"
-        />
+          <View style={styles.inputContainer}>
+            <Ionicons name="briefcase-outline" size={20} color="#555" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              value={position}
+              onChangeText={setPosition}
+              placeholder="Pozicija"
+            />
+          </View>
 
-        <Text style={styles.label}>Trajanje konkursa</Text>
-        <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePickerButton}>
-          <Text style={styles.datePickerText}>{endDate.toLocaleDateString()}</Text>
-        </TouchableOpacity>
-        {showPicker && (
-          <DateTimePicker
-            value={endDate}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={handleDateChange}
-          />
-        )}
+          <View style={styles.inputContainer}>
+            <Ionicons name="people-outline" size={20} color="#555" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              value={numberOfPositions}
+              onChangeText={setNumberOfPositions}
+              placeholder="Broj pozicija"
+              keyboardType="numeric"
+            />
+          </View>
 
-        <Text style={styles.label}>Opština</Text>
-        <View style={{ marginTop: 6, marginBottom: 12 }}>
-          <DropdownMunicipality selected={municipality} onSelect={setMunicipality} />
-        </View>
-
-        <Text style={styles.label}>Kategorija</Text>
-        <View style={{ marginTop: 6, marginBottom: 12 }}>
-          <Category selected={category} onSelect={setCategory} />
-        </View>
-
-        <Text style={styles.label}>Uslovi posla</Text>
-        <TextInput
-          style={[styles.input, { height: 80 }]}
-          value={conditions}
-          onChangeText={setConditions}
-          placeholder="Uslovi (npr. plata, radno vreme...)"
-          multiline
-        />
-
-        <Text style={styles.label}>Opis oglasa</Text>
-        <TextInput
-          style={[styles.input, { height: 100 }]}
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Opis"
-          multiline
-        />
-
-        {loading ? (
-          <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 20 }} />
-        ) : (
-          <TouchableOpacity style={styles.button} onPress={handleAddJob}>
-            <Text style={styles.buttonText}>📤 Dodaj oglas</Text>
+          <Text style={styles.label}>Trajanje konkursa</Text>
+          <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePicker}>
+            <Ionicons name="calendar-outline" size={20} color="#555" style={styles.icon} />
+            <Text style={styles.dateText}>{endDate.toLocaleDateString()}</Text>
           </TouchableOpacity>
-        )}
-      </ScrollView>
-    </TouchableWithoutFeedback>
+          {showPicker && (
+            <DateTimePicker
+              value={endDate}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleDateChange}
+            />
+          )}
+
+          <Text style={styles.label}>Opština</Text>
+          <DropdownMunicipality selected={municipality} onSelect={setMunicipality} />
+
+          <Text style={styles.label}>Kategorija</Text>
+          <Category selected={category} onSelect={setCategory} />
+
+          <Text style={styles.label}>Uslovi posla</Text>
+          <TextInput
+            style={[styles.input, styles.textarea]}
+            value={conditions}
+            onChangeText={setConditions}
+            placeholder="Npr. plata, radno vreme..."
+            multiline
+          />
+
+          <Text style={styles.label}>Opis oglasa</Text>
+          <TextInput
+            style={[styles.input, styles.textarea]}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Opis"
+            multiline
+          />
+
+          {loading ? (
+            <ActivityIndicator size="large" color="#5B8DB8" style={{ marginTop: 20 }} />
+          ) : (
+            <TouchableOpacity style={styles.button} onPress={handleAddJob}>
+              <Text style={styles.buttonText}>📤 Objavi oglas</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 };
@@ -190,48 +190,86 @@ export default AddJobScreen;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: "#fff",
+    flexGrow: 1,
+    padding: 20,
+    backgroundColor: "#e6f0fa",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#274E6D",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  staticField: {
+    marginBottom: 15,
   },
   label: {
     fontWeight: "bold",
-    marginTop: 12,
+    fontSize: 14,
+    marginBottom: 4,
+    color: "#274E6D",
   },
-  textValue: {
-    fontSize: 16,
-    marginVertical: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+  value: {
     backgroundColor: "#f0f0f0",
+    padding: 10,
     borderRadius: 6,
+    color: "#333",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  icon: {
+    marginRight: 6,
   },
   input: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 15,
+  },
+  textarea: {
+    height: 100,
+    textAlignVertical: "top",
+    backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 6,
     padding: 10,
-    marginTop: 6,
+    marginBottom: 10,
   },
-  datePickerButton: {
+  datePicker: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: 10,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#fff",
     borderRadius: 6,
-    marginTop: 6,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 15,
   },
-  datePickerText: {
+  dateText: {
+    marginLeft: 6,
     fontSize: 16,
+    color: "#333",
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#5B8DB8",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 24,
+    marginTop: 15,
     marginBottom: 40,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
+    fontSize: 16,
   },
 });

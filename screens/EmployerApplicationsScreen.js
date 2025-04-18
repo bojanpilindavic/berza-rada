@@ -68,14 +68,14 @@ const EmployerApplicationsScreen = () => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color="#5B8DB8" />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Prijave na vaše oglase</Text>
+      <Text style={styles.header}>📥 Prijave na vaše oglase</Text>
       {applications.length === 0 ? (
         <Text style={styles.noAppsText}>Nema prijava.</Text>
       ) : (
@@ -87,9 +87,7 @@ const EmployerApplicationsScreen = () => {
             <View style={styles.card}>
               <Text style={styles.applicantName}>👤 {item.name}</Text>
               <Text style={styles.email}>📧 {item.email}</Text>
-              <Text style={styles.message}>
-                💬 Poruka: {item.message || "Bez poruke"}
-              </Text>
+              <Text style={styles.message}>💬 Poruka: {item.message || "Bez poruke"}</Text>
               <Text style={styles.cv} onPress={() => openCV(item.cvUri)}>
                 📎 CV: {item.cvName || "Nema naziva"}
               </Text>
@@ -103,49 +101,51 @@ const EmployerApplicationsScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
     marginTop: 20,
+    paddingHorizontal: 10,
+    backgroundColor: "#F0F0F0",
     flex: 1,
-    backgroundColor: "#fff",
   },
   header: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 15,
     textAlign: "center",
+    color: "#274E6D",
   },
   card: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#FFFFE3",
     padding: 15,
     borderRadius: 10,
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   applicantName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
+    color: "#274E6D",
     marginBottom: 4,
   },
   email: {
     fontSize: 14,
-    color: "#555",
+    color: "#274E6D",
     marginBottom: 4,
   },
   message: {
     fontSize: 14,
-    color: "#555",
+    color: "#274E6D",
     marginBottom: 4,
   },
   cv: {
     fontSize: 14,
-    color: "#007bff",
+    color: "#5B8DB8",
     marginTop: 4,
     textDecorationLine: "underline",
+    fontWeight: "bold",
   },
   centered: {
     flex: 1,
@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
   noAppsText: {
     fontSize: 16,
     color: "gray",
-    textAlign: "center",
     marginTop: 30,
   },
 });

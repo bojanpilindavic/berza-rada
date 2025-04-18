@@ -49,31 +49,32 @@ const PrivacyPolicy = () => {
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 20,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#B6D8F7",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#007bff",
+    color: "#274E6D",
     marginBottom: 20,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: "bold",
+    color: "#274E6D",
     marginTop: 20,
     marginBottom: 10,
   },
   text: {
     fontSize: 16,
-    color: "#555",
+    color: "#333",
     marginBottom: 15,
     lineHeight: 24,
   },
-};
+});
 
 export default PrivacyPolicy;

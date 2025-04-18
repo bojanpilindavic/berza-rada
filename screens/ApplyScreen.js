@@ -1,164 +1,179 @@
 import React, { useState } from "react";
-import { 
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { db } from "../firebase/firebaseConfig";  // Prilagodi putanju prema tvom projektu
+import { db } from "../firebase/firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-
 
 const ApplyScreen = ({ route }) => {
-  const { jobId } = route.params;  // Dobijanje ID-ja oglasa iz rute
-  const { uid } = route.params.uid;  
-  const employerId  = route.params.employer;  
-
-  
-  console.log("uido",uid)
-  console.log("poslo",route.params.employer)
-
+  const { jobId, uid, employer: employerId } = route.params;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState(""); // Nije obavezno
+  const [message, setMessage] = useState("");
   const [cv, setCV] = useState(null);
-  const [loading, setLoading] = useState(false); // Dodavanje loading stanja
+  const [loading, setLoading] = useState(false);
 
-  // Funkcija za učitavanje CV-a
   const handleFileUpload = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
 
-      if (!result || result.canceled) {
-        return; // Ako korisnik odustane, ne radi ništa
-      }
+      if (!result || result.canceled) return;
 
       const file = result.assets ? result.assets[0] : result;
-      
       if (!file || !file.uri) {
         Alert.alert("Greška", "Neuspelo učitavanje CV-a.");
         return;
       }
 
-      setCV(file); // Čuva izabrani CV
+      setCV(file);
     } catch (error) {
-      Alert.alert("Greška pri učitavanju", "Pokušajte ponovo.");
+      Alert.alert("Greška", "Pokušajte ponovo.");
     }
   };
 
-  // Funkcija za slanje prijave na Firebase
   const handleSubmit = async () => {
-    if (!name || !email || !cv) {
-      Alert.alert("Greška", "Ime, Email i CV su obavezni!");
+    if (!name || !email || !cv || !cv.uri) {
+      Alert.alert("Greška", "Ime, email i CV su obavezni!");
       return;
     }
 
-    setLoading(true);  // Aktiviraj loading
-
+    setLoading(true);
     try {
-      // Dodavanje prijave u Firestore kolekciju "applications"
       await addDoc(collection(db, "applications"), {
         name,
         email,
         message,
-        cvName: cv.name,  // Čuvanje imena CV datoteke
-        cvUri: cv.uri,    // Čuvanje URI-a za CV
-        jobId,            // Dodavanje ID-ja oglasa
+        cvName: cv.name,
+        cvUri: cv.uri,
+        jobId,
         appliedAt: new Date(),
-        uid : uid,
-        employerId
-        
+        uid,
+        employerId,
       });
+      console.log("🟡 UID koji se šalje:", uid);
 
-      setLoading(false);
+
       Alert.alert("Uspešno", "Vaša prijava je uspešno poslata!");
-
-      // Resetovanje polja nakon slanja prijave
       setName("");
       setEmail("");
       setMessage("");
       setCV(null);
-
     } catch (error) {
+      console.error("❌ Greška pri slanju prijave:", error);
+      Alert.alert("Greška", "Došlo je do greške pri slanju prijave.");
+    } finally {
       setLoading(false);
-      Alert.alert("Greška", "Došlo je do greške pri slanju prijave. Pokušajte ponovo.");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Ime i prezime <Text style={styles.required}>*</Text></Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Unesite ime" 
-        value={name} 
-        onChangeText={setName} 
-      />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>Prijava na oglas</Text>
 
-      <Text style={styles.label}>Email <Text style={styles.required}>*</Text></Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Unesite email" 
-        value={email} 
-        onChangeText={setEmail} 
-        keyboardType="email-address" 
-      />
+          <Text style={styles.label}>
+            Ime i prezime <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Unesite ime i prezime"
+            value={name}
+            onChangeText={setName}
+          />
 
-      <Text style={styles.optionalText}>Ostavite poruku (opciono):</Text>
-      <TextInput 
-        style={[styles.input, styles.messageInput]} 
-        placeholder="Vaša poruka (nije obavezno)" 
-        value={message} 
-        onChangeText={setMessage} 
-        multiline 
-      />
+          <Text style={styles.label}>
+            Email <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Unesite email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+          />
 
-      <Text style={styles.label}>Dodajte CV <Text style={styles.required}>*</Text></Text>
-      <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}>
-        <Text style={styles.uploadText}>
-          {cv ? `📄 ${cv.name || "Izabrana datoteka"}` : "Dodaj CV"}
-        </Text>
-      </TouchableOpacity>
+          <Text style={styles.label}>Poruka (opciono)</Text>
+          <TextInput
+            style={[styles.input, styles.messageInput]}
+            placeholder="Ostavite poruku"
+            value={message}
+            onChangeText={setMessage}
+            multiline
+          />
 
-      <TouchableOpacity 
-        style={styles.submitButton} 
-        onPress={handleSubmit} 
-        disabled={loading}  // Onemogući dugme dok traje slanje
-      >
-        <Text style={styles.submitText}>
-          {loading ? "Slanje..." : "Prijavi se"}
-        </Text>
-      </TouchableOpacity>
-    </View>
+          <Text style={styles.label}>
+            Dodajte CV <Text style={styles.required}>*</Text>
+          </Text>
+          <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}>
+            <Text style={styles.uploadText}>
+              {cv ? `📄 ${cv.name}` : "Dodaj CV"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.submitButton, loading && { backgroundColor: "#ccc" }]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitText}>📨 Pošalji prijavu</Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
-    backgroundColor: "white",
+    backgroundColor: "#e6f0fa",
+    flexGrow: 1,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#274E6D",
+    textAlign: "center",
+    marginBottom: 20,
   },
   label: {
-    fontSize: 16,
     fontWeight: "bold",
+    fontSize: 16,
+    color: "#274E6D",
     marginTop: 10,
   },
   required: {
     color: "red",
   },
-  optionalText: {
-    fontSize: 14,
-    color: "gray",
-    marginTop: 5,
-  },
   input: {
+    backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
+    borderRadius: 6,
     padding: 10,
+    marginTop: 6,
     fontSize: 16,
-    marginTop: 5,
   },
   messageInput: {
     height: 80,
@@ -173,18 +188,20 @@ const styles = StyleSheet.create({
   },
   uploadText: {
     fontSize: 16,
-    color: "#007bff",
+    color: "#5B8DB8",
+    fontWeight: "bold",
   },
   submitButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#5B8DB8",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",
     marginTop: 20,
+    marginBottom: 40,
   },
   submitText: {
-    fontSize: 18,
-    color: "white",
+    color: "#fff",
+    fontSize: 16,
     fontWeight: "bold",
   },
 });

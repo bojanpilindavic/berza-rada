@@ -7,39 +7,68 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Alert,
 } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { collection, query, where, getDocs, getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc,
+  getFirestore,
+} from "firebase/firestore";
+import { useNavigation } from "@react-navigation/native";
 
-const CategoryJobsScreen = () => {
-  const route = useRoute();
-  const navigation = useNavigation();
-  const { category } = route.params;
-
+const MyJobScreen = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const db = getFirestore();
+  const auth = getAuth();
+  const navigation = useNavigation();
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchMyJobs = async () => {
       try {
-        const q = query(collection(db, "jobs"), where("category", "==", category));
+        const userId = auth.currentUser?.uid;
+        if (!userId) return;
+
+        const q = query(collection(db, "jobs"), where("userId", "==", userId));
         const querySnapshot = await getDocs(q);
-        const jobsList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setJobs(jobsList);
+        const jobList = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setJobs(jobList);
       } catch (error) {
-        console.error("Greška pri učitavanju poslova:", error);
+        console.error("Greška pri učitavanju mojih oglasa:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJobs();
-  }, [category]);
+    fetchMyJobs();
+  }, []);
+
+  const handleDelete = async (jobId) => {
+    Alert.alert(
+      "Brisanje oglasa",
+      "Da li si siguran da želiš obrisati ovaj oglas?",
+      [
+        { text: "Otkaži", style: "cancel" },
+        {
+          text: "Obriši",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, "jobs", jobId));
+              setJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
+            } catch (error) {
+              console.error("Greška pri brisanju oglasa:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -52,29 +81,33 @@ const CategoryJobsScreen = () => {
       </View>
       <Text style={styles.position}>{item.position || "Nepoznata pozicija"}</Text>
       <Text style={styles.location}>📍 {item.municipality || "Nepoznata lokacija"}</Text>
-      <Text style={styles.deadline}>⏳ Konkurs otvoren do: {item.endDate || "Nepoznato"}</Text>
+      <Text style={styles.deadline}>⏳ Konkurs otvoren do: {item.endDate}</Text>
       <Text style={styles.numberPosition}>
         👥 Broj slobodnih pozicija: {item.numberOfPositions || "Nepoznato"}
       </Text>
+
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => handleDelete(item.id)}
+      >
+        <Text style={styles.deleteButtonText}>🗑️ Obriši oglas</Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>
-        Kategorija: <Text style={{ fontWeight: "bold" }}>{category}</Text>
-      </Text>
-
+      <Text style={styles.header}>📂 Moji oglasi</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#5B8DB8" style={{ marginTop: 20 }} />
       ) : jobs.length === 0 ? (
-        <Text style={styles.noJobsText}>Nema oglasa za ovu kategoriju.</Text>
+        <Text style={styles.noJobsText}>Nema tvojih oglasa.</Text>
       ) : (
         <FlatList
           data={jobs}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
     </View>
@@ -89,9 +122,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0F0F0",
   },
   header: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 16,
     textAlign: "center",
     color: "#274E6D",
   },
@@ -99,17 +132,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: "center",
     fontSize: 16,
-    color: "#555",
+    color: "gray",
   },
   card: {
     backgroundColor: "#FFFFE3",
     padding: 15,
     borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: "#5B8DB8",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 3,
   },
   cardHeader: {
@@ -123,7 +156,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#274E6D",
     flex: 1,
-    paddingRight: 10,
+    paddingRight: 8,
   },
   position: {
     fontSize: 15,
@@ -152,6 +185,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     resizeMode: "contain",
   },
+  deleteButton: {
+    backgroundColor: "#C97A63",
+    paddingVertical: 10,
+    borderRadius: 6,
+    marginTop: 10,
+  },
+  deleteButtonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 15,
+  },
 });
 
-export default CategoryJobsScreen;
+export default MyJobScreen;
