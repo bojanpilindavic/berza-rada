@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { getAuth } from "firebase/auth";
+import { auth } from "../firebase/firebaseConfig";
 import {
   getFirestore,
   collection,
@@ -20,7 +20,6 @@ import {
 const WorkerApplicationsScreen = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const auth = getAuth();
   const db = getFirestore();
 
   useEffect(() => {

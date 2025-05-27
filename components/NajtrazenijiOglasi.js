@@ -44,7 +44,7 @@ const NajtrazenijiOglasi = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Oglasi iz baze</Text>
+      <Text style={styles.title}>Najpopularniji oglasi</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {oglasi.map((oglas) => (
           <TouchableOpacity

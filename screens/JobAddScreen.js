@@ -155,21 +155,22 @@ const AddJobScreen = () => {
           <Text style={styles.label}>Kategorija</Text>
           <Category selected={category} onSelect={setCategory} />
 
-          <Text style={styles.label}>Uslovi posla</Text>
-          <TextInput
-            style={[styles.input, styles.textarea]}
-            value={conditions}
-            onChangeText={setConditions}
-            placeholder="Npr. plata, radno vreme..."
-            multiline
-          />
+        
 
           <Text style={styles.label}>Opis oglasa</Text>
           <TextInput
             style={[styles.input, styles.textarea]}
             value={description}
             onChangeText={setDescription}
-            placeholder="Opis"
+            placeholder="Opis radnih zadataka"
+            multiline
+          />
+            <Text style={styles.label}>Uslovi posla</Text>
+          <TextInput
+            style={[styles.input, styles.textarea]}
+            value={conditions}
+            onChangeText={setConditions}
+            placeholder="Strucna sprema, radno iskustvo, pozavanje stranog jezika ..."
             multiline
           />
 

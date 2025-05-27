@@ -8,6 +8,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { FontAwesome5 } from "@expo/vector-icons";
+
 
 const categories = [
   { id: 1, name: "Turizam i ugostiteljstvo", icon: "restaurant-outline", color: "#274E6D" },
@@ -16,7 +18,13 @@ const categories = [
   { id: 4, name: "Prehrambena industrija", icon: "fast-food-outline", color: "#274E6D" },
   { id: 5, name: "Građevina i geodezija", icon: "business-outline", color: "#274E6D" },
   { id: 6, name: "Elektrotehnika", icon: "flash-outline", color: "#274E6D" },
+  { id: 7, name: "Administrativne usluge", icon: "document-text-outline", color: "#274E6D" },
+  { id: 8, name: "Zanatske i lične usluge", icon: "hammer-outline", color: "#274E6D" },
+  { id: 9, name: "Pravo i ekonomija", icon: "book-outline", color: "#274E6D" },
+  { id: 10, name: "Prerada i obrada drveta", icon: "leaf-outline", color: "#274E6D" },
+  { id: 11, name: "Ostalo", icon: "ellipsis-horizontal-outline", color: "#274E6D" },
 ];
+
 
 const JobCategories = () => {
   const navigation = useNavigation();

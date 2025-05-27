@@ -8,7 +8,7 @@ const SplashScreen = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace("HomeScreen"); // Menja Splash screen sa Home screenom
-    }, 15000); // 4 sekunde prikaza
+    }, 5000); // 4 sekunde prikaza
 
     return () => clearTimeout(timer);
   }, []);

@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import About from "./About";
 
 const Header = () => {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -68,29 +69,37 @@ const Header = () => {
 
       {/* PRVI RED: Hamburger meni + Naziv aplikacije + Ikone */}
       <View style={styles.topContainer}>
-  <TouchableOpacity onPress={() => setMenuVisible(true)}>
-    <Ionicons name="menu" size={30} color="black" />
-  </TouchableOpacity>
+        <TouchableOpacity onPress={() => setMenuVisible(true)}>
+          <Ionicons name="menu" size={30} color="#274E6D" />
+        </TouchableOpacity>
 
-  <View style={{ flex: 1, alignItems: "center", maxHeight: 100 }}>
-    <Image source={require("../assets/headert.png")} style={styles.headerLogo} />
-  </View>
+        <View style={{ flex: 1, alignItems: "center", maxHeight: 100 }}>
+          <Image source={require("../assets/headert.png")} style={styles.headerLogo} />
+        </View>
 
-  <View style={styles.iconsContainer}>
-    <TouchableOpacity>
-      <Ionicons name="heart-outline" size={24} color="black"  onPress={() => navigation.navigate("MyJobScreen")}/>
-    </TouchableOpacity>
-    {user ? (
-      <TouchableOpacity onPress={() => setProfileMenuVisible(true)}>
-        <Ionicons name="person-circle-outline" size={30} color="black" />
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity onPress={() => navigation.navigate("LoginScreen")}>
-        <Ionicons name="log-in-outline" size={24} color="black" />
-      </TouchableOpacity>
-    )}
-  </View>
-</View>
+        <View style={styles.iconsContainer}>
+          <TouchableOpacity
+            onPress={() => {
+              if (userType === "worker") {
+                navigation.navigate("SavedJobsScreen");  // radnik gleda sačuvane
+              } else {
+                navigation.navigate("MyJobScreen");      // poslodavac ostaje na MyJobScreen
+              }
+            }}
+          >
+            <Ionicons name="heart-outline" size={24} color="#274E6D" />
+          </TouchableOpacity>
+          {user ? (
+            <TouchableOpacity onPress={() => setProfileMenuVisible(true)}>
+              <Ionicons name="person-circle-outline" size={30} color="#274E6D" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => navigation.navigate("LoginScreen")}>
+              <Ionicons name="log-in-outline" size={24} color="#274E6D" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
       {/* DRUGI RED: Search bar + Objavi oglas */}
       <View style={styles.bottomContainer}>
@@ -221,9 +230,8 @@ const Header = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>O nama</Text>
-            <Text>Aplikacija “Berza rada” je nastala u okviru projekta „Podrška Evropske unije lokalnim partnerstvima za zapošljavanje – Faza II“ (LEP II – Local Employment Partnership) sa realizacijom je započeo projekat „Korak do posla“ koji realizuje Lokalno partnerstvo za zapošljavanje (LPZ) Istočno Sarajevo čiji je glavni nosilac Gradska razvojna agencija-RAIS. Pored RAIS-a na projektu učestvuje još osam partnerskih organizacija i institucija. Agencija za razvoj preduzeća Eda Banja Luka, Grad Istočno Sarajevo, Opština Istočno Novo Sarajevo, Opština Istočna Ilidža, JU Zavod za zapošljavanje Republike Srpske, Mašinski fakultet Univerziteta u Istočnom Sarajevu, Eko Željeznica d.o.o. Istočna Ilidža i Zlatno Zrno sp Istočno Novo Sarajevo su partneri na projektu.
+            <About />
 
-              Lokalno partnerstvo za zapošljavanje Istočno Sarajevo je jedno od 26 partnerstava uspostavljenih u BiH u okviru projekta “Podrška Evropske unije lokalnim partnerstvima za zapošljavanje – Faza II” (LEP II), kojeg Evropska unija finansira s 6 miliona eura, a provodi Međunarodna organizacija rada). Ovaj projekat ima za cilj da kroz lokalna partnerstva za zapošljavanje doprinese poboljšanju zapošljavanja u lokalnim zajednicama i unaprijedi vještine i prilike za zapošljavanje osoba u nepovoljnom položaju na tržištu rada.</Text>
             <TouchableOpacity onPress={() => setAboutVisible(false)}>
               <Text style={styles.closeButton}>Zatvori</Text>
             </TouchableOpacity>
@@ -250,12 +258,14 @@ const styles = StyleSheet.create({
   },
 
   headerLogo: {
-    width: 150,
-    height: 100,
+    width: 250,
+    height: 140,
     resizeMode: "contain",
     marginHorizontal: 10,
+    marginTop: -16,    // već imaš da podigneš
+    marginLeft: 40,    // pomera desno za 20px
   },
-  
+
 
   iconsContainer: {
     flexDirection: "row",

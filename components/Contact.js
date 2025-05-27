@@ -6,25 +6,42 @@ const Contact = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Kontakt</Text>
 
-      <Text style={styles.text}>
-        Ako imate bilo kakva pitanja, sugestije ili probleme prilikom korišćenja aplikacije, slobodno nas kontaktirajte.
+      <Text style={styles.textTitle}>
+      Biro Istočno Novo Sarajevo
       </Text>
 
       <Text style={styles.text}>
-        📧 Email: podrška@berzarada.com
+        📧 Email: biro.insarajevo@fis.zzzrs.net
       </Text>
 
       <Text style={styles.text}>
-        📞 Telefon: +387 61 123 456
+        📞 Telefon: 057 / 344 – 261
+
       </Text>
 
       <Text style={styles.text}>
-        📍 Adresa: Ulica Primjera 12, 71000 Sarajevo, Bosna i Hercegovina
+        📍 Adresa: Spasovdanska 23, 71123 Istočno Sarajevo
+
+      </Text>
+
+      <Text style={styles.textTitle}>
+      Biro Istočna Ilidža      </Text>
+
+      <Text style={styles.text}>
+        📧 Email: biro.iilidza@fis.zzzrs.net
       </Text>
 
       <Text style={styles.text}>
-        Radno vrijeme korisničke podrške: Ponedeljak – Petak od 09:00 do 17:00
+        📞 Telefon: 057 / 344 – 262
+
       </Text>
+
+      <Text style={styles.text}>
+        📍 Adresa: Dabrobosanska 26, 71123 Istočna Ilidža
+
+
+      </Text>
+
     </ScrollView>
   );
 };
@@ -44,9 +61,17 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    color: "#333",
+    color: "#274E6D",
     marginBottom: 15,
     lineHeight: 24,
+  },
+  textTitle: {
+    fontSize: 16,
+    color: "#274E6D",
+    marginBottom: 15,
+    lineHeight: 24,
+    fontWeight: "bold",
+
   },
 });
 

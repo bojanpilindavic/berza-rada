@@ -5,7 +5,9 @@ const municipalities = [
   "Istočno Novo Sarajevo",
   "Istočna Ilidža",
   "Pale",
-  "Sokolac",
+  "Istočni Stari Grad",
+  "Trnovo",
+  "Sokolac"
 ];
 
 export default function DropdownMunicipality({ selected, onSelect }) {
