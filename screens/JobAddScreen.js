@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,14 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from "react-native";
-import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { auth } from "../firebase/firebaseConfig";
 import DropdownMunicipality from "../components/DropdownMunicipality";
@@ -31,6 +38,7 @@ const AddJobScreen = () => {
   const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const scrollViewRef = useRef(null);
   const db = getFirestore();
 
   useEffect(() => {
@@ -53,7 +61,14 @@ const AddJobScreen = () => {
   };
 
   const handleAddJob = async () => {
-    if (!position || !numberOfPositions || !description || !conditions || !municipality || !endDate) {
+    if (
+      !position ||
+      !numberOfPositions ||
+      !description ||
+      !conditions ||
+      !municipality ||
+      !endDate
+    ) {
       alert("Molimo popunite sva polja.");
       return;
     }
@@ -104,9 +119,16 @@ const AddJobScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={styles.title}>Objavi oglas</Text>
 
           <View style={styles.staticField}>
@@ -115,7 +137,12 @@ const AddJobScreen = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <Ionicons name="briefcase-outline" size={20} color="#555" style={styles.icon} />
+            <Ionicons
+              name="briefcase-outline"
+              size={20}
+              color="#555"
+              style={styles.icon}
+            />
             <TextInput
               style={styles.input}
               value={position}
@@ -125,7 +152,12 @@ const AddJobScreen = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <Ionicons name="people-outline" size={20} color="#555" style={styles.icon} />
+            <Ionicons
+              name="people-outline"
+              size={20}
+              color="#555"
+              style={styles.icon}
+            />
             <TextInput
               style={styles.input}
               value={numberOfPositions}
@@ -136,8 +168,16 @@ const AddJobScreen = () => {
           </View>
 
           <Text style={styles.label}>Trajanje konkursa</Text>
-          <TouchableOpacity onPress={() => setShowPicker(true)} style={styles.datePicker}>
-            <Ionicons name="calendar-outline" size={20} color="#555" style={styles.icon} />
+          <TouchableOpacity
+            onPress={() => setShowPicker(true)}
+            style={styles.datePicker}
+          >
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color="#555"
+              style={styles.icon}
+            />
             <Text style={styles.dateText}>{endDate.toLocaleDateString()}</Text>
           </TouchableOpacity>
           {showPicker && (
@@ -150,12 +190,13 @@ const AddJobScreen = () => {
           )}
 
           <Text style={styles.label}>Opština</Text>
-          <DropdownMunicipality selected={municipality} onSelect={setMunicipality} />
+          <DropdownMunicipality
+            selected={municipality}
+            onSelect={setMunicipality}
+          />
 
           <Text style={styles.label}>Kategorija</Text>
           <Category selected={category} onSelect={setCategory} />
-
-        
 
           <Text style={styles.label}>Opis oglasa</Text>
           <TextInput
@@ -165,17 +206,25 @@ const AddJobScreen = () => {
             placeholder="Opis radnih zadataka"
             multiline
           />
-            <Text style={styles.label}>Uslovi posla</Text>
+
+          <Text style={styles.label}>Uslovi posla</Text>
           <TextInput
             style={[styles.input, styles.textarea]}
             value={conditions}
             onChangeText={setConditions}
-            placeholder="Strucna sprema, radno iskustvo, pozavanje stranog jezika ..."
+            placeholder="Stručna sprema, radno iskustvo, poznavanje stranog jezika ..."
             multiline
+            onFocus={() =>
+              scrollViewRef.current?.scrollToEnd({ animated: true })
+            }
           />
 
           {loading ? (
-            <ActivityIndicator size="large" color="#5B8DB8" style={{ marginTop: 20 }} />
+            <ActivityIndicator
+              size="large"
+              color="#5B8DB8"
+              style={{ marginTop: 20 }}
+            />
           ) : (
             <TouchableOpacity style={styles.button} onPress={handleAddJob}>
               <Text style={styles.buttonText}>📤 Objavi oglas</Text>

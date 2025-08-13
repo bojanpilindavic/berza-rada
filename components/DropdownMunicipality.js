@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+} from "react-native";
 
 const municipalities = [
   "Istočno Novo Sarajevo",
@@ -7,7 +13,7 @@ const municipalities = [
   "Pale",
   "Istočni Stari Grad",
   "Trnovo",
-  "Sokolac"
+  "Sokolac",
 ];
 
 export default function DropdownMunicipality({ selected, onSelect }) {
@@ -15,10 +21,7 @@ export default function DropdownMunicipality({ selected, onSelect }) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.dropdown}
-        onPress={() => setOpen(!open)}
-      >
+      <TouchableOpacity style={styles.dropdown} onPress={() => setOpen(!open)}>
         <Text style={styles.dropdownText}>
           {selected || "Izaberite opštinu"}
         </Text>

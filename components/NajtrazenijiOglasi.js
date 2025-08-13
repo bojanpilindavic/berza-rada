@@ -1,3 +1,5 @@
+// NajtrazenijiOglasi.js
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -6,7 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
+  Linking,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { collection, query, limit, getDocs } from "firebase/firestore";
@@ -20,9 +22,12 @@ const NajtrazenijiOglasi = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const q = query(collection(db, "jobs"), limit(5));
+        const q = query(collection(db, "adminJobs"), limit(5));
         const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setOglasi(data);
       } catch (err) {
         console.error("❌ Greška pri učitavanju oglasa:", err);
@@ -44,22 +49,43 @@ const NajtrazenijiOglasi = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Najpopularniji oglasi</Text>
+      <Text style={styles.title}>Oglasi javnih institucija</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {oglasi.map((oglas) => (
-          <TouchableOpacity
-            key={oglas.id}
-            style={styles.card}
-            onPress={() => navigation.navigate("JobDetailsScreen", { job: oglas })}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.firma}>{oglas.companyName}</Text>
-              {oglas.logo && <Image source={{ uri: oglas.logo }} style={styles.logo} />}
+          <View key={oglas.id} style={styles.card}>
+            {/* Poslodavac */}
+            <Text style={styles.employer} numberOfLines={1}>
+              {oglas.employer}
+            </Text>
+
+            {/* Opština */}
+            <View style={styles.row}>
+              <Text style={styles.label}>📍</Text>
+              <Text style={styles.value} numberOfLines={1}>
+                {oglas.municipality}
+              </Text>
             </View>
-            <Text style={styles.position}>{oglas.position}</Text>
-            <Text style={styles.location}>📍 {oglas.municipality}</Text>
-            <Text style={styles.deadline}>⏳ {oglas.endDate}</Text>
-          </TouchableOpacity>
+
+            {/* Rok za konkurs */}
+            <View style={styles.row}>
+              <Text style={styles.label}>⏳</Text>
+              <Text style={styles.value} numberOfLines={1}>
+                {oglas.endDate}
+              </Text>
+            </View>
+
+            {/* Link kao klikabilan tekst */}
+            {oglas.link ? (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(oglas.link)}
+                style={styles.linkContainer}
+              >
+                <Text style={styles.linkText} numberOfLines={1}>
+                  🔗 Pogledaj link
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
         ))}
       </ScrollView>
     </View>
@@ -68,56 +94,53 @@ const NajtrazenijiOglasi = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
-    paddingHorizontal: 10,
+    marginTop: 16,
+    paddingHorizontal: 8,
     backgroundColor: "#F0F0F0",
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 8,
     textAlign: "center",
     color: "#274E6D",
   },
   card: {
-    width: 220,
-    backgroundColor: '#75D5C2',
-    padding: 15,
-    borderRadius: 10,
-    marginRight: 10,
-    elevation: 3,
+    width: 200, // fiksna širina kartice
+    backgroundColor: "#94D8CA",
+    padding: 10, // smanjen padding
+    borderRadius: 8,
+    marginRight: 8, // manji razmak između kartica
+    elevation: 2,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  firma: {
-    fontSize: 16,
+  employer: {
+    fontSize: 16, // smanjen font
     fontWeight: "bold",
     color: "#274E6D",
-    flex: 1,
-    paddingRight: 5,
+    marginBottom: 6, // manja margina ispod
+    textAlign: "center",
   },
-  position: {
-    fontSize: 14,
-    fontWeight: "600",
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  label: {
+    fontSize: 12, // manji font za ikonicu
+    marginRight: 4,
+  },
+  value: {
+    fontSize: 12, // manji font za tekst
+    color: "#333",
+    flexShrink: 1, // da tekst ne rasteže karticu
+  },
+  linkContainer: {
+    marginTop: 4,
+  },
+  linkText: {
+    fontSize: 12, // manja veličina fonta
     color: "#274E6D",
-    marginTop: 5,
-  },
-  location: {
-    fontSize: 13,
-    color: "#555",
-  },
-  deadline: {
-    fontSize: 13,
-    color: "#777",
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    marginLeft: 5,
+    textDecorationLine: "underline",
   },
   loadingContainer: {
     alignItems: "center",

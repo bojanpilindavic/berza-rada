@@ -1,6 +1,11 @@
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebaseConfig";
-export const saveUserToFirestore = async (uid, userType, data, imageURL = null) => {
+export const saveUserToFirestore = async (
+  uid,
+  userType,
+  data,
+  imageURL = null
+) => {
   const userData = {
     uid,
     userType,
@@ -26,4 +31,3 @@ export const saveUserToFirestore = async (uid, userType, data, imageURL = null) 
     console.error("❌ Greška prilikom snimanja korisnika:", error);
   }
 };
-

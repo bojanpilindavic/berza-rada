@@ -65,7 +65,6 @@ const ApplyScreen = ({ route }) => {
       });
       console.log("🟡 UID koji se šalje:", uid);
 
-
       Alert.alert("Uspešno", "Vaša prijava je uspešno poslata!");
       setName("");
       setEmail("");
@@ -121,14 +120,20 @@ const ApplyScreen = ({ route }) => {
           <Text style={styles.label}>
             Dodajte CV <Text style={styles.required}>*</Text>
           </Text>
-          <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={handleFileUpload}
+          >
             <Text style={styles.uploadText}>
               {cv ? `📄 ${cv.name}` : "Dodaj CV"}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.submitButton, loading && { backgroundColor: "#ccc" }]}
+            style={[
+              styles.submitButton,
+              loading && { backgroundColor: "#ccc" },
+            ]}
             onPress={handleSubmit}
             disabled={loading}
           >

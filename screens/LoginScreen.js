@@ -1,3 +1,5 @@
+// LoginScreen.js
+
 import React, { useState } from "react";
 import {
   View,
@@ -9,9 +11,14 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { isAdmin } from "../firebase/firebaseConfig";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -32,14 +39,23 @@ const LoginScreen = () => {
     setLoading(true);
 
     signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
+      .then(({ user }) => {
         if (!user.emailVerified) {
           setErrorMessage("Molimo verifikujte svoj email pre prijave.");
           setLoading(false);
           return;
         }
-        console.log("User logged in:", user);
+
+        // ───── PROVERA ADMINA ─────
+        const adminFlag = isAdmin(user.email);
+        setLoading(false);
+        if (adminFlag) {
+          navigation.reset({ index: 0, routes: [{ name: "AdminHome" }] });
+          return;
+        }
+        // ───────────────────────────
+
+        console.log("User logged in:", user.email);
         navigation.reset({ index: 0, routes: [{ name: "HomeScreen" }] });
       })
       .catch((error) => {
@@ -65,13 +81,19 @@ const LoginScreen = () => {
 
   const handleForgotPassword = () => {
     if (!email) {
-      Alert.alert("Greška", "Molimo unesite email adresu pre nego što resetujete šifru.");
+      Alert.alert(
+        "Greška",
+        "Molimo unesite email adresu pre nego što resetujete šifru."
+      );
       return;
     }
 
     sendPasswordResetEmail(auth, email)
       .then(() => {
-        Alert.alert("Uspešno", "Link za resetovanje šifre je poslat na vaš email.");
+        Alert.alert(
+          "Uspešno",
+          "Link za resetovanje šifre je poslat na vaš email."
+        );
       })
       .catch((error) => {
         let message = "Došlo je do greške. Pokušajte ponovo.";
@@ -84,13 +106,23 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Image source={require("../assets/headerlogo.png")} style={styles.headerLogo} />
+      <Image
+        source={require("../assets/headerlogo.png")}
+        style={styles.headerLogo}
+      />
       <Text style={styles.title}>Prijava</Text>
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
 
       {/* EMAIL INPUT */}
       <View style={styles.inputContainer}>
-        <Ionicons name="mail-outline" size={20} color="#555" style={styles.icon} />
+        <Ionicons
+          name="mail-outline"
+          size={20}
+          color="#555"
+          style={styles.icon}
+        />
         <TextInput
           placeholder="Email"
           value={email}
@@ -103,7 +135,12 @@ const LoginScreen = () => {
 
       {/* PASSWORD INPUT */}
       <View style={styles.inputContainer}>
-        <Ionicons name="lock-closed-outline" size={20} color="#555" style={styles.icon} />
+        <Ionicons
+          name="lock-closed-outline"
+          size={20}
+          color="#555"
+          style={styles.icon}
+        />
         <TextInput
           placeholder="Šifra"
           value={password}
@@ -111,7 +148,7 @@ const LoginScreen = () => {
           style={styles.inputField}
           secureTextEntry={!showPassword}
         />
-        <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+        <TouchableOpacity onPress={() => setShowPassword((p) => !p)}>
           <Ionicons
             name={showPassword ? "eye-off-outline" : "eye-outline"}
             size={20}
@@ -121,8 +158,16 @@ const LoginScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Prijavi se</Text>}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Prijavi se</Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleForgotPassword}>

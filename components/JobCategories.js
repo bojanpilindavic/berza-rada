@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   category: {
     alignItems: "center",
     marginRight: 15,
-    backgroundColor: "#F2BAB3",
+    backgroundColor: "#E0F7FA",
     padding: 10,
     borderRadius: 10,
     minWidth: 100,

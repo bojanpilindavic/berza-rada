@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
@@ -9,7 +15,7 @@ const opstine = [
   "Pale",
   "Istočni Stari Grad",
   "Trnovo",
-  "Sokolac"
+  "Sokolac",
 ];
 
 const PretragaOpstine = () => {
@@ -18,14 +24,27 @@ const PretragaOpstine = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pretraga po opštinama</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContainer}
+      >
         {opstine.map((opstina, index) => (
           <TouchableOpacity
             key={index}
             style={styles.button}
-            onPress={() => navigation.navigate("MunicipalityJobScreen", { municipality: opstina })}
+            onPress={() =>
+              navigation.navigate("MunicipalityJobScreen", {
+                municipality: opstina,
+              })
+            }
           >
-            <FontAwesome5 name="map-marker-alt" size={18} color="#fff" style={styles.icon} />
+            <FontAwesome5
+              name="map-marker-alt"
+              size={18}
+              color="#fff"
+              style={styles.icon}
+            />
             <Text style={styles.buttonText}>{opstina}</Text>
           </TouchableOpacity>
         ))}

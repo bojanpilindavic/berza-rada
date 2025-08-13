@@ -3,6 +3,7 @@ import React from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack"; 
+
 import HomeScreen from "./screens/HomeScreen"; 
 import JobDetailsScreen from "./screens/JobDetailsScreen"; 
 import ApplyScreen from "./screens/ApplyScreen";
@@ -18,7 +19,10 @@ import JobSearchScreen from "./screens/JobSearchScreen";
 import SplashScreen from "./screens/SplashScreen";
 import MyJobScreen from "./screens/MyJobScreen";
 import SavedJobsScreen from "./screens/SavedJobScreen";
+// ← DODATO
+import AdminHome from "./screens/AdminHome";
 
+import AdminJobScreen from "./screens/AdminJobScreen";
 const Stack = createStackNavigator();
 
 const App = () => {
@@ -34,6 +38,7 @@ const App = () => {
           }}
         >
           <Stack.Screen name="SplashScreen" options={{ headerShown: false }} component={SplashScreen} />
+
           <Stack.Screen name="HomeScreen" options={{ headerShown: false, title: "Početna" }} component={HomeScreen} />
           <Stack.Screen name="JobDetailsScreen" options={{ title: "Detalji posla" }} component={JobDetailsScreen} />
           <Stack.Screen name="ApplyScreen" options={{ title: "Prijava na oglas" }} component={ApplyScreen} />
@@ -47,12 +52,21 @@ const App = () => {
           <Stack.Screen name="MunicipalityJobScreen" options={{ title: "Pretraga" }} component={MunicipalityJobScreen} />
           <Stack.Screen name="JobSearchScreen" options={{ title: "Pretraga" }} component={JobSearchScreen} />
           <Stack.Screen name="MyJobScreen" options={{ title: "" }} component={MyJobScreen} />
+          <Stack.Screen name="AdminJobScreen" options={{ title: "" }} component={AdminJobScreen} />
+
+          
+          {/* Naš novi Admin ekran */}
+          <Stack.Screen 
+            name="AdminHome" 
+            component={AdminHome} 
+            options={{ title: "Admin Panel", headerShown: false }} 
+          />
+
           <Stack.Screen
             name="SavedJobsScreen"
             component={SavedJobsScreen}
             options={{ title: "Sačuvani oglasi" }}
           />
-
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

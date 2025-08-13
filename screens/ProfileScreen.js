@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import DropdownMunicipality from "../components/DropdownMunicipality"; // Ispravi putanju ako treba
 
 const ProfileScreen = () => {
   const db = getFirestore();
@@ -72,7 +73,9 @@ const ProfileScreen = () => {
           {editing ? (
             <TextInput
               value={editedData.fullName}
-              onChangeText={(text) => setEditedData({ ...editedData, fullName: text })}
+              onChangeText={(text) =>
+                setEditedData({ ...editedData, fullName: text })
+              }
               style={styles.input}
             />
           ) : (
@@ -81,10 +84,11 @@ const ProfileScreen = () => {
 
           <Text style={styles.label}>Opština</Text>
           {editing ? (
-            <TextInput
-              value={editedData.municipality}
-              onChangeText={(text) => setEditedData({ ...editedData, municipality: text })}
-              style={styles.input}
+            <DropdownMunicipality
+              selected={editedData.municipality}
+              onSelect={(opstina) =>
+                setEditedData({ ...editedData, municipality: opstina })
+              }
             />
           ) : (
             <Text style={styles.valueBox}>{userData.municipality}</Text>
@@ -96,7 +100,9 @@ const ProfileScreen = () => {
           {editing ? (
             <TextInput
               value={editedData.companyName}
-              onChangeText={(text) => setEditedData({ ...editedData, companyName: text })}
+              onChangeText={(text) =>
+                setEditedData({ ...editedData, companyName: text })
+              }
               style={styles.input}
             />
           ) : (
@@ -107,7 +113,9 @@ const ProfileScreen = () => {
           {editing ? (
             <TextInput
               value={editedData.jib}
-              onChangeText={(text) => setEditedData({ ...editedData, jib: text })}
+              onChangeText={(text) =>
+                setEditedData({ ...editedData, jib: text })
+              }
               style={styles.input}
             />
           ) : (
@@ -118,7 +126,9 @@ const ProfileScreen = () => {
           {editing ? (
             <TextInput
               value={editedData.activity}
-              onChangeText={(text) => setEditedData({ ...editedData, activity: text })}
+              onChangeText={(text) =>
+                setEditedData({ ...editedData, activity: text })
+              }
               style={styles.input}
             />
           ) : (
@@ -127,10 +137,11 @@ const ProfileScreen = () => {
 
           <Text style={styles.label}>Opština</Text>
           {editing ? (
-            <TextInput
-              value={editedData.municipality}
-              onChangeText={(text) => setEditedData({ ...editedData, municipality: text })}
-              style={styles.input}
+            <DropdownMunicipality
+              selected={editedData.municipality}
+              onSelect={(opstina) =>
+                setEditedData({ ...editedData, municipality: opstina })
+              }
             />
           ) : (
             <Text style={styles.valueBox}>{userData.municipality}</Text>
@@ -139,7 +150,10 @@ const ProfileScreen = () => {
       )}
 
       {!editing ? (
-        <TouchableOpacity onPress={() => setEditing(true)} style={styles.editButton}>
+        <TouchableOpacity
+          onPress={() => setEditing(true)}
+          style={styles.editButton}
+        >
           <Text style={styles.editButtonText}>✏️ Izmeni profil</Text>
         </TouchableOpacity>
       ) : (

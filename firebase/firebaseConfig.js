@@ -4,10 +4,10 @@ import { initializeApp } from "firebase/app";
 import {
   getAuth,
   initializeAuth,
-  getReactNativePersistence
+  getReactNativePersistence,
 } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";           // ← dodaj ovo
+import { Platform } from "react-native";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -22,13 +22,21 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// platform-aware auth init:
-const auth = Platform.OS === "web"
-  ? getAuth(app)
-  : initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
+const auth =
+  Platform.OS === "web"
+    ? getAuth(app)
+    : initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
 
 const db = getFirestore(app);
+
+// ───── OVDE DODAJ ─────
+export const ADMIN_EMAIL = "matematicki_kutak@yahoo.com";
+
+export const isAdmin = (email) => {
+  return email === ADMIN_EMAIL;
+};
+// ─────────────────────
 
 export { app, auth, db };
