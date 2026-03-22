@@ -9,12 +9,19 @@ import {
   Image,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { collection, query, where, getDocs, getFirestore } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getFirestore,
+} from "firebase/firestore";
 
 const CategoryJobsScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { category } = route.params;
+
+  const category = route?.params?.category ?? ""; // safe fallback
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,13 +30,26 @@ const CategoryJobsScreen = () => {
 
   useEffect(() => {
     const fetchJobs = async () => {
+      if (!category) {
+        setJobs([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
       try {
-        const q = query(collection(db, "jobs"), where("category", "==", category));
+        const q = query(
+          collection(db, "jobs"),
+          where("category", "==", category)
+        );
         const querySnapshot = await getDocs(q);
-        const jobsList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+
+        const jobsList = querySnapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
         }));
+
         setJobs(jobsList);
       } catch (error) {
         console.error("Greška pri učitavanju poslova:", error);
@@ -39,7 +59,7 @@ const CategoryJobsScreen = () => {
     };
 
     fetchJobs();
-  }, [category]);
+  }, [category, db]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -47,14 +67,25 @@ const CategoryJobsScreen = () => {
       onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
     >
       <View style={styles.cardHeader}>
-        <Text style={styles.firma}>{item.companyName || "Nepoznata firma"}</Text>
-        {item.logo && <Image source={{ uri: item.logo }} style={styles.logo} />}
+        <Text style={styles.firma}>
+          {item.companyName || "Nepoznata firma"}
+        </Text>
+        {item.logo ? (
+          <Image source={{ uri: item.logo }} style={styles.logo} />
+        ) : null}
       </View>
-      <Text style={styles.position}>{item.position || "Nepoznata pozicija"}</Text>
-      <Text style={styles.location}>📍 {item.municipality || "Nepoznata lokacija"}</Text>
-      <Text style={styles.deadline}>⏳ Konkurs otvoren do: {item.endDate || "Nepoznato"}</Text>
+
+      <Text style={styles.position}>
+        {item.position || "Nepoznata pozicija"}
+      </Text>
+      <Text style={styles.location}>
+        📍 {item.municipality || "Nepoznata lokacija"}
+      </Text>
+      <Text style={styles.deadline}>
+        ⏳ Konkurs otvoren do: {item.endDate || "Nepoznato"}
+      </Text>
       <Text style={styles.numberPosition}>
-        👥 Broj slobodnih pozicija: {item.numberOfPositions || "Nepoznato"}
+        👥 Broj slobodnih pozicija: {item.numberOfPositions ?? "Nepoznato"}
       </Text>
     </TouchableOpacity>
   );
@@ -62,11 +93,16 @@ const CategoryJobsScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>
-        Kategorija: <Text style={{ fontWeight: "bold" }}>{category}</Text>
+        Kategorija:{" "}
+        <Text style={{ fontWeight: "bold" }}>{category || "—"}</Text>
       </Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#5B8DB8" style={{ marginTop: 20 }} />
+        <ActivityIndicator
+          size="large"
+          color="#5B8DB8"
+          style={{ marginTop: 20 }}
+        />
       ) : jobs.length === 0 ? (
         <Text style={styles.noJobsText}>Nema oglasa za ovu kategoriju.</Text>
       ) : (

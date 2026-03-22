@@ -1,16 +1,18 @@
-// HomeScreen.js
 import React from "react";
-import { SafeAreaView, ScrollView, StatusBar } from "react-native";
-import Header from "../components/Header";  // Proverite putanju do komponente
-import JobCategories from "../components/JobCategories";  // Proverite putanju
-import NajnovijiOglasi from "../components/NajnovijiOglasi";  // Proverite putanju
-import PretragaOpstina from "../components/PretragaOpstina";  // Proverite putanju
+import { ScrollView, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import Header from "../components/Header";
+import JobCategories from "../components/JobCategories";
+import NajnovijiOglasi from "../components/NajnovijiOglasi";
+import PretragaOpstina from "../components/PretragaOpstina";
 import Footer from "../components/Footer";
 import NajtrazenijiOglasi from "../components/NajtrazenijiOglasi";
 
 const HomeScreen = () => {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white", paddingTop: StatusBar.currentHeight }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }} edges={["top"]}>
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <Header />
         <JobCategories />

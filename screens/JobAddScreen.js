@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   ScrollView,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import {
   getFirestore,
@@ -44,16 +45,29 @@ const AddJobScreen = () => {
   useEffect(() => {
     const fetchCompanyName = async () => {
       const user = auth.currentUser;
-      if (user) {
+
+      if (!user) {
+        setCompanyName("");
+        return;
+      }
+
+      try {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
-          setCompanyName(docSnap.data().companyName || "");
+          setCompanyName(docSnap.data()?.companyName || "");
+        } else {
+          setCompanyName("");
         }
+      } catch (err) {
+        console.error("Greška pri dohvaćanju firme:", err);
+        setCompanyName("");
       }
     };
+
     fetchCompanyName();
-  }, []);
+  }, [db]);
 
   const handleDateChange = (event, selectedDate) => {
     setShowPicker(false);
@@ -61,21 +75,28 @@ const AddJobScreen = () => {
   };
 
   const handleAddJob = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Greška", "Morate biti prijavljeni da biste objavili oglas.");
+      return;
+    }
+
     if (
       !position ||
       !numberOfPositions ||
       !description ||
       !conditions ||
       !municipality ||
+      !category ||
       !endDate
     ) {
-      alert("Molimo popunite sva polja.");
+      Alert.alert("Greška", "Molimo popunite sva polja.");
       return;
     }
 
-    const numberOfPositionsInt = parseInt(numberOfPositions);
+    const numberOfPositionsInt = parseInt(numberOfPositions, 10);
     if (isNaN(numberOfPositionsInt) || numberOfPositionsInt <= 0) {
-      alert("Unesite validan broj pozicija.");
+      Alert.alert("Greška", "Unesite validan broj pozicija.");
       return;
     }
 
@@ -97,11 +118,12 @@ const AddJobScreen = () => {
         municipality,
         category,
         createdAt: serverTimestamp(),
-        userId: auth.currentUser.uid,
+        userId: user.uid,
       };
 
       await addDoc(collection(db, "jobs"), jobData);
-      alert("✅ Oglas uspešno dodat!");
+
+      Alert.alert("✅ Uspešno", "Oglas je uspešno dodat!");
 
       setPosition("");
       setNumberOfPositions("");
@@ -112,7 +134,7 @@ const AddJobScreen = () => {
       setEndDate(new Date());
     } catch (error) {
       console.error("❌ Greška prilikom dodavanja oglasa:", error);
-      alert("Došlo je do greške prilikom dodavanja oglasa.");
+      Alert.alert("Greška", "Došlo je do greške prilikom dodavanja oglasa.");
     } finally {
       setLoading(false);
     }
@@ -133,7 +155,7 @@ const AddJobScreen = () => {
 
           <View style={styles.staticField}>
             <Text style={styles.label}>Naziv firme</Text>
-            <Text style={styles.value}>{companyName || "Učitavanje..."}</Text>
+            <Text style={styles.value}>{companyName || "—"}</Text>
           </View>
 
           <View style={styles.inputContainer}>
@@ -178,8 +200,11 @@ const AddJobScreen = () => {
               color="#555"
               style={styles.icon}
             />
-            <Text style={styles.dateText}>{endDate.toLocaleDateString()}</Text>
+            <Text style={styles.dateText}>
+              {endDate.toLocaleDateString("sr-RS")}
+            </Text>
           </TouchableOpacity>
+
           {showPicker && (
             <DateTimePicker
               value={endDate}

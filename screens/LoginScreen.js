@@ -1,5 +1,4 @@
 // LoginScreen.js
-
 import React, { useState } from "react";
 import {
   View,
@@ -26,11 +25,16 @@ const LoginScreen = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
   const navigation = useNavigation();
   const auth = getAuth();
 
-  const handleLogin = () => {
-    if (!email || !password) {
+  const normalizeEmail = (value) => value.trim().toLowerCase();
+
+  const handleLogin = async () => {
+    const cleanEmail = normalizeEmail(email);
+
+    if (!cleanEmail || !password) {
       setErrorMessage("Molimo unesite email i šifru.");
       return;
     }
@@ -38,49 +42,60 @@ const LoginScreen = () => {
     setErrorMessage("");
     setLoading(true);
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then(({ user }) => {
-        if (!user.emailVerified) {
-          setErrorMessage("Molimo verifikujte svoj email pre prijave.");
-          setLoading(false);
-          return;
-        }
+    try {
+      const { user } = await signInWithEmailAndPassword(
+        auth,
+        cleanEmail,
+        password
+      );
 
-        // ───── PROVERA ADMINA ─────
-        const adminFlag = isAdmin(user.email);
+      if (!user.emailVerified) {
+        setErrorMessage("Molimo verifikujte svoj email pre prijave.");
         setLoading(false);
-        if (adminFlag) {
-          navigation.reset({ index: 0, routes: [{ name: "AdminHome" }] });
-          return;
-        }
-        // ───────────────────────────
+        return;
+      }
 
-        console.log("User logged in:", user.email);
-        navigation.reset({ index: 0, routes: [{ name: "HomeScreen" }] });
-      })
-      .catch((error) => {
-        let message = "Došlo je do greške. Pokušajte ponovo.";
-        switch (error.code) {
-          case "auth/invalid-email":
-            message = "Neispravan format email adrese.";
-            break;
-          case "auth/user-not-found":
-            message = "Korisnik sa ovom email adresom ne postoji.";
-            break;
-          case "auth/wrong-password":
-            message = "Pogrešna šifra. Pokušajte ponovo.";
-            break;
-          case "auth/too-many-requests":
-            message = "Previše neuspelih pokušaja. Pokušajte kasnije.";
-            break;
-        }
-        setErrorMessage(message);
-        setLoading(false);
-      });
+      // ───── PROVERA ADMINA ─────
+      const adminFlag = isAdmin(user.email);
+      setLoading(false);
+
+      if (adminFlag) {
+        navigation.reset({ index: 0, routes: [{ name: "AdminHome" }] });
+        return;
+      }
+      // ───────────────────────────
+
+      console.log("User logged in:", user.email);
+      navigation.reset({ index: 0, routes: [{ name: "HomeScreen" }] });
+    } catch (error) {
+      let message = "Došlo je do greške. Pokušajte ponovo.";
+
+      switch (error.code) {
+        case "auth/invalid-email":
+          message = "Neispravan format email adrese.";
+          break;
+        case "auth/user-not-found":
+          message = "Korisnik sa ovom email adresom ne postoji.";
+          break;
+        case "auth/wrong-password":
+          message = "Pogrešna šifra. Pokušajte ponovo.";
+          break;
+        case "auth/too-many-requests":
+          message = "Previše neuspelih pokušaja. Pokušajte kasnije.";
+          break;
+        default:
+          break;
+      }
+
+      setErrorMessage(message);
+      setLoading(false);
+    }
   };
 
-  const handleForgotPassword = () => {
-    if (!email) {
+  const handleForgotPassword = async () => {
+    const cleanEmail = normalizeEmail(email);
+
+    if (!cleanEmail) {
       Alert.alert(
         "Greška",
         "Molimo unesite email adresu pre nego što resetujete šifru."
@@ -88,20 +103,19 @@ const LoginScreen = () => {
       return;
     }
 
-    sendPasswordResetEmail(auth, email)
-      .then(() => {
-        Alert.alert(
-          "Uspešno",
-          "Link za resetovanje šifre je poslat na vaš email."
-        );
-      })
-      .catch((error) => {
-        let message = "Došlo je do greške. Pokušajte ponovo.";
-        if (error.code === "auth/user-not-found") {
-          message = "Nije pronađen korisnik sa ovom email adresom.";
-        }
-        Alert.alert("Greška", message);
-      });
+    try {
+      await sendPasswordResetEmail(auth, cleanEmail);
+      Alert.alert(
+        "Uspešno",
+        "Link za resetovanje šifre je poslat na vaš email."
+      );
+    } catch (error) {
+      let message = "Došlo je do greške. Pokušajte ponovo.";
+      if (error.code === "auth/user-not-found") {
+        message = "Nije pronađen korisnik sa ovom email adresom.";
+      }
+      Alert.alert("Greška", message);
+    }
   };
 
   return (
@@ -110,7 +124,9 @@ const LoginScreen = () => {
         source={require("../assets/headerlogo.png")}
         style={styles.headerLogo}
       />
+
       <Text style={styles.title}>Prijava</Text>
+
       {errorMessage ? (
         <Text style={styles.errorText}>{errorMessage}</Text>
       ) : null}
@@ -130,6 +146,7 @@ const LoginScreen = () => {
           style={styles.inputField}
           keyboardType="email-address"
           autoCapitalize="none"
+          autoCorrect={false}
         />
       </View>
 
@@ -147,6 +164,8 @@ const LoginScreen = () => {
           onChangeText={setPassword}
           style={styles.inputField}
           secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         <TouchableOpacity onPress={() => setShowPassword((p) => !p)}>
           <Ionicons

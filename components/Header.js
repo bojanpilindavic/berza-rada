@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,14 @@ import {
   StyleSheet,
   Modal,
   Image,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+
 import About from "./About";
 import Contact from "./Contact";
 
@@ -21,6 +23,7 @@ const Header = () => {
   const [contactVisible, setContactVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+
   const [user, setUser] = useState(null);
   const [userType, setUserType] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,65 +33,103 @@ const Header = () => {
   const db = getFirestore();
 
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-        if (userDoc.exists()) {
-          setUserType(userDoc.data().userType);
-        }
-      } else {
+      if (!isMounted) return;
+
+      setUser(currentUser ?? null);
+
+      if (!currentUser) {
         setUserType(null);
+        return;
+      }
+
+      try {
+        const snap = await getDoc(doc(db, "users", currentUser.uid));
+        if (!isMounted) return;
+
+        if (snap.exists()) {
+          setUserType(snap.data()?.userType ?? null);
+        } else {
+          setUserType(null);
+        }
+      } catch (e) {
+        console.error("Greška pri učitavanju userType:", e);
+        if (isMounted) setUserType(null);
       }
     });
-    return () => unsubscribe();
-  }, []);
 
-  const handleSearch = () => {
-    if (searchTerm.trim() !== "") {
-      navigation.navigate("JobSearchScreen", { query: searchTerm });
-      setSearchTerm("");
-    }
-  };
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [auth, db]);
 
-  const handleLogout = async () => {
+  const handleSearch = useCallback(() => {
+    const query = searchTerm.trim();
+    if (!query) return;
+
+    navigation.navigate("JobSearchScreen", { query });
+    setSearchTerm("");
+  }, [navigation, searchTerm]);
+
+  const handleLogout = useCallback(async () => {
     try {
       await signOut(auth);
       setProfileMenuVisible(false);
+      // Po potrebi: navigation.replace("LoginScreen");
     } catch (error) {
       console.error("Greška prilikom odjave:", error);
     }
-  };
+  }, [auth]);
+
+  const goToHeart = useCallback(() => {
+    if (userType === "worker") {
+      navigation.navigate("SavedJobsScreen");
+    } else {
+      navigation.navigate("MyJobScreen");
+    }
+  }, [navigation, userType]);
+
+  const canPostJob = userType === "employer" || !user;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       {/* PRVI RED */}
       <View style={styles.topContainer}>
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
+        <TouchableOpacity
+          onPress={() => setMenuVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Otvori meni"
+        >
           <Ionicons name="menu" size={30} color="#274E6D" />
         </TouchableOpacity>
 
-        <View style={{ flex: 1, alignItems: "center", maxHeight: 100 }}>
+        <View style={styles.logoContainer} pointerEvents="none">
           <Image
             source={require("../assets/headert.png")}
             style={styles.headerLogo}
+            accessible
+            accessibilityLabel="Berza rada"
           />
         </View>
 
         <View style={styles.iconsContainer}>
           <TouchableOpacity
-            onPress={() => {
-              if (userType === "worker") {
-                navigation.navigate("SavedJobsScreen");
-              } else {
-                navigation.navigate("MyJobScreen");
-              }
-            }}
+            onPress={goToHeart}
+            accessibilityRole="button"
+            accessibilityLabel="Sačuvani oglasi"
           >
             <Ionicons name="heart-outline" size={24} color="#274E6D" />
           </TouchableOpacity>
+
           {user ? (
-            <TouchableOpacity onPress={() => setProfileMenuVisible(true)}>
+            <TouchableOpacity
+              onPress={() => setProfileMenuVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Profil meni"
+            >
               <Ionicons
                 name="person-circle-outline"
                 size={30}
@@ -98,6 +139,8 @@ const Header = () => {
           ) : (
             <TouchableOpacity
               onPress={() => navigation.navigate("LoginScreen")}
+              accessibilityRole="button"
+              accessibilityLabel="Prijava"
             >
               <Ionicons name="log-in-outline" size={24} color="#274E6D" />
             </TouchableOpacity>
@@ -108,27 +151,34 @@ const Header = () => {
       {/* DRUGI RED */}
       <View style={styles.bottomContainer}>
         <View
-          style={[
-            styles.searchContainer,
-            !user || userType === "worker" ? { flex: 1 } : null,
-          ]}
+          style={[styles.searchContainer, !canPostJob && styles.searchFull]}
         >
           <Ionicons name="search" size={20} color="#555" />
+
           <TextInput
             placeholder="Pretraži oglase..."
+            placeholderTextColor="#666"
             style={styles.searchInput}
             value={searchTerm}
             onChangeText={setSearchTerm}
             onSubmitEditing={handleSearch}
+            returnKeyType="search"
+            autoCorrect={false}
+            autoCapitalize="none"
+            accessibilityLabel="Pretraga oglasa"
           />
+
           <Ionicons name="mic" size={20} color="#555" />
         </View>
-        {userType === "employer" || !user ? (
+
+        {canPostJob ? (
           <TouchableOpacity
             style={styles.button}
             onPress={() =>
               navigation.navigate(user ? "JobAddScreen" : "RegisterScreen")
             }
+            accessibilityRole="button"
+            accessibilityLabel="Objavi oglas"
           >
             <Text style={styles.buttonText}>+ Objavi oglas</Text>
           </TouchableOpacity>
@@ -136,7 +186,12 @@ const Header = () => {
       </View>
 
       {/* MODAL: Meni */}
-      <Modal visible={menuVisible} transparent animationType="slide">
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setMenuVisible(false)}
+      >
         <View style={styles.overlay}>
           <View style={styles.modalBox}>
             {!user && (
@@ -149,6 +204,7 @@ const Header = () => {
                 <Text style={styles.menuItem}>📝 Registracija</Text>
               </TouchableOpacity>
             )}
+
             <TouchableOpacity
               onPress={() => {
                 setMenuVisible(false);
@@ -157,6 +213,7 @@ const Header = () => {
             >
               <Text style={styles.menuItem}>📞 Kontakt</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               onPress={() => {
                 setMenuVisible(false);
@@ -165,11 +222,9 @@ const Header = () => {
             >
               <Text style={styles.menuItem}>ℹ️ O nama</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[
-                styles.modalButton,
-                { alignSelf: "center", marginTop: 20 },
-              ]}
+              style={[styles.modalButton, styles.modalButtonCentered]}
               onPress={() => setMenuVisible(false)}
             >
               <Text style={styles.modalButtonText}>Zatvori</Text>
@@ -178,12 +233,20 @@ const Header = () => {
         </View>
       </Modal>
 
-      {/* MODAL: Kontakt */}
-      <Modal visible={contactVisible} animationType="slide">
-        <SafeAreaView style={styles.fullscreenModal}>
+      {/* MODAL: Kontakt (fullscreen) */}
+      <Modal
+        visible={contactVisible}
+        animationType="slide"
+        onRequestClose={() => setContactVisible(false)}
+      >
+        <SafeAreaView
+          style={styles.fullscreenModal}
+          edges={["top", "left", "right"]}
+        >
           <Contact />
+
           <TouchableOpacity
-            style={[styles.modalButton, { alignSelf: "center", marginTop: 20 }]}
+            style={[styles.modalButton, styles.modalButtonCentered]}
             onPress={() => setContactVisible(false)}
           >
             <Text style={styles.modalButtonText}>Zatvori</Text>
@@ -191,12 +254,20 @@ const Header = () => {
         </SafeAreaView>
       </Modal>
 
-      {/* MODAL: O nama */}
-      <Modal visible={aboutVisible} animationType="slide">
-        <SafeAreaView style={styles.fullscreenModal}>
+      {/* MODAL: O nama (fullscreen) */}
+      <Modal
+        visible={aboutVisible}
+        animationType="slide"
+        onRequestClose={() => setAboutVisible(false)}
+      >
+        <SafeAreaView
+          style={styles.fullscreenModal}
+          edges={["top", "left", "right"]}
+        >
           <About />
+
           <TouchableOpacity
-            style={[styles.modalButton, { alignSelf: "center", marginTop: 20 }]}
+            style={[styles.modalButton, styles.modalButtonCentered]}
             onPress={() => setAboutVisible(false)}
           >
             <Text style={styles.modalButtonText}>Zatvori</Text>
@@ -205,32 +276,33 @@ const Header = () => {
       </Modal>
 
       {/* MODAL: Profil korisnika */}
-      <Modal visible={profileMenuVisible} transparent animationType="slide">
+      <Modal
+        visible={profileMenuVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setProfileMenuVisible(false)}
+      >
         <View style={styles.overlay}>
           <View style={styles.modalBox}>
-            <Text
-              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
-            >
-              Profil meni
-            </Text>
+            <Text style={styles.profileTitle}>Profil meni</Text>
+
             <TouchableOpacity
               onPress={() => {
                 setProfileMenuVisible(false);
-                navigation.navigate("ProfileScreen"); // Prilagodi ime ako drugačije
+                navigation.navigate("ProfileScreen");
               }}
             >
               <Text style={styles.menuItem}>👤 Moj profil</Text>
             </TouchableOpacity>
+
             <TouchableOpacity onPress={handleLogout}>
-              <Text style={[styles.menuItem, { color: "red" }]}>
+              <Text style={[styles.menuItem, styles.logoutItem]}>
                 🚪 Odjavi se
               </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[
-                styles.modalButton,
-                { alignSelf: "center", marginTop: 20 },
-              ]}
+              style={[styles.modalButton, styles.modalButtonCentered]}
               onPress={() => setProfileMenuVisible(false)}
             >
               <Text style={styles.modalButtonText}>Zatvori</Text>
@@ -247,12 +319,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#A8E6CF",
     paddingBottom: 10,
   },
+
   topContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
   },
+
+  logoContainer: {
+    flex: 1,
+    alignItems: "center",
+    maxHeight: 100,
+  },
+
   headerLogo: {
     width: 250,
     height: 140,
@@ -260,70 +340,109 @@ const styles = StyleSheet.create({
     marginTop: -36,
     marginLeft: 40,
   },
+
   iconsContainer: {
     flexDirection: "row",
     gap: 10,
     alignItems: "center",
   },
+
   bottomContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
+    marginTop: 6,
   },
+
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#eee",
     borderRadius: 10,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: Platform.OS === "ios" ? 10 : 6,
     flex: 1,
   },
+
+  // kad nema dugmeta, search zauzme sve
+  searchFull: {
+    marginRight: 0,
+  },
+
   searchInput: {
     flex: 1,
-    paddingVertical: 5,
-    marginLeft: 5,
+    paddingVertical: 0,
+    marginLeft: 6,
+    marginRight: 6,
+    color: "#111",
   },
+
   button: {
     backgroundColor: "#5B8DB8",
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 5,
+    borderRadius: 8,
     marginLeft: 10,
   },
+
   buttonText: {
-    fontWeight: "bold",
+    fontWeight: "700",
     color: "#FFFFFF",
   },
+
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 16,
   },
+
   modalBox: {
     backgroundColor: "#fff",
-    width: "80%",
-    borderRadius: 10,
+    width: "100%",
+    maxWidth: 360,
+    borderRadius: 12,
     padding: 20,
     alignItems: "center",
   },
+
+  profileTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 10,
+    color: "#1B3A57",
+  },
+
   menuItem: {
     fontSize: 16,
     paddingVertical: 12,
+    textAlign: "center",
   },
+
+  logoutItem: {
+    color: "red",
+  },
+
   modalButton: {
     backgroundColor: "#274E6D",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
   },
+
+  modalButtonCentered: {
+    alignSelf: "center",
+    marginTop: 20,
+  },
+
   modalButtonText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "700",
     fontSize: 16,
   },
+
   fullscreenModal: {
     flex: 1,
     backgroundColor: "#fff",

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Linking,
+  Alert,
 } from "react-native";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -20,22 +21,14 @@ const EmployerApplicationsScreen = () => {
     const fetchApplications = async () => {
       try {
         const currentUser = auth.currentUser;
-        if (!currentUser) return;
 
-        const jobsQuery = query(
-          collection(db, "jobs"),
-          where("userId", "==", currentUser.uid)
-        );
-
-        const jobsSnapshot = await getDocs(jobsQuery);
-        const jobIds = jobsSnapshot.docs.map((doc) => doc.id);
-
-        if (jobIds.length === 0) {
+        if (!currentUser) {
           setApplications([]);
           setLoading(false);
           return;
         }
 
+        // Jedan upit je dovoljan (po employerId)
         const appsQuery = query(
           collection(db, "applications"),
           where("employerId", "==", currentUser.uid)
@@ -43,9 +36,9 @@ const EmployerApplicationsScreen = () => {
 
         const appsSnapshot = await getDocs(appsQuery);
 
-        const data = appsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+        const data = appsSnapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
         }));
 
         setApplications(data);
@@ -59,10 +52,23 @@ const EmployerApplicationsScreen = () => {
     fetchApplications();
   }, []);
 
-  const openCV = (uri) => {
-    Linking.openURL(uri).catch((err) =>
-      console.error("Greška pri otvaranju CV-a", err)
-    );
+  const openCV = async (uri) => {
+    if (!uri) {
+      Alert.alert("Greška", "CV nije dostupan.");
+      return;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(uri);
+      if (!supported) {
+        Alert.alert("Greška", "Ne mogu otvoriti ovaj CV link.");
+        return;
+      }
+      await Linking.openURL(uri);
+    } catch (err) {
+      console.error("Greška pri otvaranju CV-a", err);
+      Alert.alert("Greška", "Ne mogu otvoriti CV.");
+    }
   };
 
   if (loading) {
@@ -76,6 +82,7 @@ const EmployerApplicationsScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>📥 Prijave na vaše oglase</Text>
+
       {applications.length === 0 ? (
         <Text style={styles.noAppsText}>Nema prijava.</Text>
       ) : (
@@ -85,9 +92,14 @@ const EmployerApplicationsScreen = () => {
           contentContainerStyle={{ paddingBottom: 20 }}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <Text style={styles.applicantName}>👤 {item.name}</Text>
-              <Text style={styles.email}>📧 {item.email}</Text>
-              <Text style={styles.message}>💬 Poruka: {item.message || "Bez poruke"}</Text>
+              <Text style={styles.applicantName}>
+                👤 {item.name || "Nepoznato"}
+              </Text>
+              <Text style={styles.email}>📧 {item.email || "—"}</Text>
+              <Text style={styles.message}>
+                💬 Poruka: {item.message || "Bez poruke"}
+              </Text>
+
               <Text style={styles.cv} onPress={() => openCV(item.cvUri)}>
                 📎 CV: {item.cvName || "Nema naziva"}
               </Text>
@@ -147,15 +159,12 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
     fontWeight: "bold",
   },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   noAppsText: {
     fontSize: 16,
     color: "gray",
     marginTop: 30,
+    textAlign: "center",
   },
 });
 

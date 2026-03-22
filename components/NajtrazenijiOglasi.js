@@ -1,6 +1,6 @@
 // NajtrazenijiOglasi.js
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,34 +9,57 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Alert,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { collection, query, limit, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 
 const NajtrazenijiOglasi = () => {
-  const navigation = useNavigation();
   const [oglasi, setOglasi] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const openLink = useCallback(async (url) => {
+    if (!url) return;
+
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (!canOpen) {
+        Alert.alert("Neispravan link", "Ovaj link se ne može otvoriti.");
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (e) {
+      console.error("❌ Greška pri otvaranju linka:", e);
+      Alert.alert("Greška", "Nije moguće otvoriti link.");
+    }
+  }, []);
+
   useEffect(() => {
+    let mounted = true;
+
     const fetchJobs = async () => {
       try {
         const q = query(collection(db, "adminJobs"), limit(5));
         const snapshot = await getDocs(q);
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+
+        const data = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
         }));
-        setOglasi(data);
+
+        if (mounted) setOglasi(data);
       } catch (err) {
         console.error("❌ Greška pri učitavanju oglasa:", err);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     fetchJobs();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) {
@@ -50,44 +73,51 @@ const NajtrazenijiOglasi = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Oglasi javnih institucija</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {oglasi.map((oglas) => (
-          <View key={oglas.id} style={styles.card}>
-            {/* Poslodavac */}
-            <Text style={styles.employer} numberOfLines={1}>
-              {oglas.employer}
-            </Text>
 
-            {/* Opština */}
-            <View style={styles.row}>
-              <Text style={styles.label}>📍</Text>
-              <Text style={styles.value} numberOfLines={1}>
-                {oglas.municipality}
+      {oglasi.length === 0 ? (
+        <Text style={styles.emptyText}>Trenutno nema oglasa.</Text>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {oglasi.map((oglas) => (
+            <View key={oglas.id} style={styles.card}>
+              <Text style={styles.employer} numberOfLines={2}>
+                {oglas.employer || "Javna institucija"}
               </Text>
-            </View>
 
-            {/* Rok za konkurs */}
-            <View style={styles.row}>
-              <Text style={styles.label}>⏳</Text>
-              <Text style={styles.value} numberOfLines={1}>
-                {oglas.endDate}
-              </Text>
-            </View>
-
-            {/* Link kao klikabilan tekst */}
-            {oglas.link ? (
-              <TouchableOpacity
-                onPress={() => Linking.openURL(oglas.link)}
-                style={styles.linkContainer}
-              >
-                <Text style={styles.linkText} numberOfLines={1}>
-                  🔗 Pogledaj link
+              <View style={styles.row}>
+                <Text style={styles.label}>📍</Text>
+                <Text style={styles.value} numberOfLines={1}>
+                  {oglas.municipality || "-"}
                 </Text>
-              </TouchableOpacity>
-            ) : null}
-          </View>
-        ))}
-      </ScrollView>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>⏳</Text>
+                <Text style={styles.value} numberOfLines={1}>
+                  {oglas.endDate || "-"}
+                </Text>
+              </View>
+
+              {oglas.link ? (
+                <TouchableOpacity
+                  onPress={() => openLink(oglas.link)}
+                  style={styles.linkContainer}
+                  accessibilityRole="button"
+                  accessibilityLabel="Otvori link oglasa"
+                >
+                  <Text style={styles.linkText} numberOfLines={1}>
+                    🔗 Pogledaj link
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -105,19 +135,23 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#274E6D",
   },
+  scrollContent: {
+    paddingRight: 8,
+    paddingBottom: 4,
+  },
   card: {
-    width: 200, // fiksna širina kartice
+    width: 200,
     backgroundColor: "#94D8CA",
-    padding: 10, // smanjen padding
+    padding: 10,
     borderRadius: 8,
-    marginRight: 8, // manji razmak između kartica
+    marginRight: 8,
     elevation: 2,
   },
   employer: {
-    fontSize: 16, // smanjen font
+    fontSize: 16,
     fontWeight: "bold",
     color: "#274E6D",
-    marginBottom: 6, // manja margina ispod
+    marginBottom: 6,
     textAlign: "center",
   },
   row: {
@@ -126,25 +160,30 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   label: {
-    fontSize: 12, // manji font za ikonicu
+    fontSize: 12,
     marginRight: 4,
   },
   value: {
-    fontSize: 12, // manji font za tekst
+    fontSize: 12,
     color: "#333",
-    flexShrink: 1, // da tekst ne rasteže karticu
+    flexShrink: 1,
   },
   linkContainer: {
     marginTop: 4,
   },
   linkText: {
-    fontSize: 12, // manja veličina fonta
+    fontSize: 12,
     color: "#274E6D",
     textDecorationLine: "underline",
   },
   loadingContainer: {
     alignItems: "center",
     marginVertical: 20,
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#666",
+    marginBottom: 12,
   },
 });
 

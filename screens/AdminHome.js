@@ -1,8 +1,7 @@
 // screens/AdminHome.js
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   FlatList,
@@ -10,66 +9,90 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  StatusBar
+  RefreshControl,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import Footer from "../components/Footer";
-import { getAuth } from "firebase/auth";
+import AdminHeader from "../components/AdminHeader";
+
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   getFirestore,
   collection,
   getDocs,
   deleteDoc,
-  doc
+  doc,
 } from "firebase/firestore";
-import AdminHeader from "../components/AdminHeader";
 
 const AdminHome = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+
   const db = getFirestore();
-  const user = getAuth().currentUser;
+  const auth = getAuth();
+
+  const fetchJobs = useCallback(async () => {
+    const snapshot = await getDocs(collection(db, "jobs"));
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+  }, [db]);
 
   useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUserEmail(u?.email || "");
+    });
+
     (async () => {
       try {
-        const snapshot = await getDocs(collection(db, "jobs"));
-        setJobs(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+        const data = await fetchJobs();
+        setJobs(data);
       } catch (e) {
         console.error("Greška pri učitavanju oglasa:", e);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
 
-  const handleDelete = (jobId) => {
-    Alert.alert(
-      "Potvrda brisanja",
-      "Želite li obrisati ovaj oglas?",
-      [
-        { text: "Otkaži", style: "cancel" },
-        {
-          text: "Obriši",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(db, "jobs", jobId));
-              setJobs(current => current.filter(j => j.id !== jobId));
-              Alert.alert("Obrisano", "Oglas je uspješno obrisan.");
-            } catch (e) {
-              console.error("Greška pri brisanju oglasa:", e);
-              Alert.alert("Greška", "Brisanje oglasa nije uspelo.");
-            }
-          }
-        }
-      ]
-    );
+    return () => unsub();
+  }, [auth, fetchJobs]);
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const data = await fetchJobs();
+      setJobs(data);
+    } catch (e) {
+      console.error("Greška pri osvežavanju oglasa:", e);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  // renderuje se pre nego što imamo podatke
+  const handleDelete = (jobId) => {
+    Alert.alert("Potvrda brisanja", "Želite li obrisati ovaj oglas?", [
+      { text: "Otkaži", style: "cancel" },
+      {
+        text: "Obriši",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteDoc(doc(db, "jobs", jobId));
+            setJobs((current) => current.filter((j) => j.id !== jobId));
+            Alert.alert("Obrisano", "Oglas je uspješno obrisan.");
+          } catch (e) {
+            console.error("Greška pri brisanju oglasa:", e);
+            Alert.alert("Greška", "Brisanje oglasa nije uspjelo.");
+          }
+        },
+      },
+    ]);
+  };
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <AdminHeader />
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#5B8DB8" />
@@ -79,25 +102,40 @@ const AdminHome = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <FlatList
         data={jobs}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
         ListHeaderComponent={() => (
           <>
             <AdminHeader />
             <View style={styles.container}>
               <Text style={styles.header}>🛠️ Admin Panel</Text>
-              <Text style={styles.subtitle}>Ulogovani: {user?.email}</Text>
+              {!!userEmail && (
+                <Text style={styles.subtitle}>Ulogovani: {userEmail}</Text>
+              )}
             </View>
           </>
         )}
+        ListEmptyComponent={() => (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>Nema oglasa za prikaz.</Text>
+          </View>
+        )}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <View>
-              <Text style={styles.title}>{item.position}</Text>
-              <Text style={styles.company}>{item.companyName}</Text>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={styles.title}>
+                {item.position || "Bez pozicije"}
+              </Text>
+              <Text style={styles.company}>
+                {item.companyName || "Bez naziva firme"}
+              </Text>
             </View>
+
             <TouchableOpacity onPress={() => handleDelete(item.id)}>
               <Text style={styles.deleteText}>Obriši</Text>
             </TouchableOpacity>
@@ -114,28 +152,36 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: StatusBar.currentHeight
   },
   container: {
     paddingHorizontal: 16,
     paddingTop: 20,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   header: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#274E6D",
-    marginBottom: 4
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
     color: "#555",
-    marginBottom: 12
+    marginBottom: 12,
   },
   center: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+  },
+  empty: {
+    paddingHorizontal: 16,
+    paddingVertical: 30,
+    alignItems: "center",
+  },
+  emptyText: {
+    color: "#555",
+    fontSize: 14,
   },
   card: {
     flexDirection: "row",
@@ -146,22 +192,22 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 16,
     marginBottom: 10,
-    elevation: 1
+    elevation: 1,
   },
   title: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#274E6D"
+    color: "#274E6D",
   },
   company: {
     fontSize: 14,
     color: "#5B8DB8",
-    marginTop: 2
+    marginTop: 2,
   },
   deleteText: {
     color: "#C00",
-    fontWeight: "bold"
-  }
+    fontWeight: "bold",
+  },
 });
 
 export default AdminHome;

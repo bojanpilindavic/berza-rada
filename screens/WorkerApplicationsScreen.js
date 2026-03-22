@@ -26,27 +26,43 @@ const WorkerApplicationsScreen = () => {
     const fetchApplications = async () => {
       try {
         const currentUser = auth.currentUser;
-        if (!currentUser) return;
+
+        if (!currentUser) {
+          setApplications([]);
+          setLoading(false);
+          return;
+        }
 
         const q = query(
           collection(db, "applications"),
           where("uid", "==", currentUser.uid)
         );
+
         const querySnapshot = await getDocs(q);
 
-        const apps = [];
+        // Paralelno učitavanje poslova (brže)
+        const apps = await Promise.all(
+          querySnapshot.docs.map(async (docSnap) => {
+            const appData = docSnap.data();
 
-        for (const docSnap of querySnapshot.docs) {
-          const appData = docSnap.data();
-          const jobRef = doc(db, "jobs", appData.jobId);
-          const jobSnap = await getDoc(jobRef);
+            let job = null;
+            if (appData?.jobId) {
+              try {
+                const jobRef = doc(db, "jobs", appData.jobId);
+                const jobSnap = await getDoc(jobRef);
+                job = jobSnap.exists() ? jobSnap.data() : null;
+              } catch (e) {
+                job = null;
+              }
+            }
 
-          apps.push({
-            id: docSnap.id,
-            ...appData,
-            job: jobSnap.exists() ? jobSnap.data() : null,
-          });
-        }
+            return {
+              id: docSnap.id,
+              ...appData,
+              job,
+            };
+          })
+        );
 
         setApplications(apps);
       } catch (error) {
@@ -57,7 +73,21 @@ const WorkerApplicationsScreen = () => {
     };
 
     fetchApplications();
-  }, []);
+  }, [db]);
+
+  const formatAppliedAt = (appliedAt) => {
+    if (!appliedAt) return "Nepoznat datum";
+
+    // Firestore Timestamp (najčešće)
+    if (appliedAt?.seconds) {
+      return new Date(appliedAt.seconds * 1000).toLocaleString("sr-RS");
+    }
+
+    // Ako nekad dođe Date ili string
+    const d = new Date(appliedAt);
+    if (isNaN(d.getTime())) return "Nepoznat datum";
+    return d.toLocaleString("sr-RS");
+  };
 
   if (loading) {
     return (
@@ -85,17 +115,22 @@ const WorkerApplicationsScreen = () => {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.jobTitle}>{item.job?.position || "Nepoznat oglas"}</Text>
-              <Text style={styles.company}>{item.job?.companyName || "Nepoznata firma"}</Text>
+              <Text style={styles.jobTitle}>
+                {item.job?.position || "Nepoznat oglas"}
+              </Text>
+              <Text style={styles.company}>
+                {item.job?.companyName || "Nepoznata firma"}
+              </Text>
             </View>
 
-            <Text style={styles.detail}>💬 Poruka: {item.message || "Nema poruke"}</Text>
-            <Text style={styles.detail}>📎 CV: {item.cvName || "Nepoznat fajl"}</Text>
+            <Text style={styles.detail}>
+              💬 Poruka: {item.message || "Nema poruke"}
+            </Text>
+            <Text style={styles.detail}>
+              📎 CV: {item.cvName || "Nepoznat fajl"}
+            </Text>
             <Text style={styles.date}>
-              🕒 Prijavljeno:{" "}
-              {item.appliedAt
-                ? new Date(item.appliedAt.seconds * 1000).toLocaleString("sr-RS")
-                : "Nepoznat datum"}
+              🕒 Prijavljeno: {formatAppliedAt(item.appliedAt)}
             </Text>
           </View>
         )}

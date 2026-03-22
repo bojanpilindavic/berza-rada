@@ -22,6 +22,7 @@ import { db } from "../firebase/firebaseConfig";
 
 const NajnovijiOglasi = () => {
   const navigation = useNavigation();
+
   const [oglasi, setOglasi] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -46,13 +47,13 @@ const NajnovijiOglasi = () => {
       }
 
       const querySnapshot = await getDocs(q);
-      const jobsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const jobsData = querySnapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
       }));
 
       if (pagination) {
-        setOglasi((prevOglasi) => [...prevOglasi, ...jobsData]);
+        setOglasi((prev) => [...prev, ...jobsData]);
       } else {
         setOglasi(jobsData);
       }
@@ -73,30 +74,29 @@ const NajnovijiOglasi = () => {
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
-      setLastVisible(null); // Resetujemo lastVisible pri novom fokusu
-      fetchJobs();
+      setLastVisible(null);
+      fetchJobs(false, false);
     }, [])
   );
 
   const handleRefresh = () => {
-    console.log("🔄 Ručno osvežavanje...");
     setRefreshing(true);
-    setLastVisible(null); // Resetuj paginaciju pri refreshu
+    setLastVisible(null);
     fetchJobs(false, true);
   };
 
   const loadMore = () => {
     if (!loadingMore && lastVisible) {
       setLoadingMore(true);
-      fetchJobs(true);
+      fetchJobs(true, false);
     }
   };
 
   if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Učitavanje oglasa...</Text>
+        <ActivityIndicator size="large" color="#274E6D" />
+        <Text style={styles.loadingText}>Učitavanje oglasa...</Text>
       </View>
     );
   }
@@ -104,7 +104,9 @@ const NajnovijiOglasi = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Najnoviji oglasi</Text>
+
       <ScrollView
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
@@ -113,28 +115,58 @@ const NajnovijiOglasi = () => {
           <TouchableOpacity
             key={oglas.id}
             style={styles.card}
-            onPress={() => navigation.navigate("JobDetailsScreen", { job: oglas })}
+            activeOpacity={0.85}
+            onPress={() =>
+              navigation.navigate("JobDetailsScreen", { job: oglas })
+            }
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.firma}>{oglas.companyName}</Text>
-              {oglas.logo && <Image source={{ uri: oglas.logo }} style={styles.logo} />}
+              <Text style={styles.firma} numberOfLines={1}>
+                {oglas.companyName || "Naziv firme"}
+              </Text>
+
+              {oglas.logo ? (
+                <Image
+                  source={{ uri: oglas.logo }}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              ) : null}
             </View>
-            <Text style={styles.position}>{oglas.position}</Text>
-            <Text style={styles.location}>📍 {oglas.municipality}</Text>
-            <Text style={styles.deadline}>⏳ Konkurs otvoren do: {oglas.endDate}</Text>
-            <Text style={styles.numberPosition}>👥 Broj slobodnih pozicija: {oglas.numberOfPositions}</Text>
+
+            {!!oglas.position && (
+              <Text style={styles.position}>{oglas.position}</Text>
+            )}
+            {!!oglas.municipality && (
+              <Text style={styles.location}>📍 {oglas.municipality}</Text>
+            )}
+            {!!oglas.endDate && (
+              <Text style={styles.deadline}>
+                ⏳ Konkurs otvoren do: {oglas.endDate}
+              </Text>
+            )}
+            {oglas.numberOfPositions !== undefined &&
+              oglas.numberOfPositions !== null && (
+                <Text style={styles.numberPosition}>
+                  👥 Broj slobodnih pozicija: {oglas.numberOfPositions}
+                </Text>
+              )}
           </TouchableOpacity>
         ))}
 
-        {loadingMore && (
-          <ActivityIndicator size="large" color="#add8e6" style={{ marginTop: 20 }} />
-        )}
+        {loadingMore ? (
+          <ActivityIndicator
+            size="large"
+            color="#add8e6"
+            style={{ marginTop: 20 }}
+          />
+        ) : null}
 
-        {!loadingMore && lastVisible && (
+        {!loadingMore && lastVisible ? (
           <TouchableOpacity onPress={loadMore} style={styles.loadMoreButton}>
             <Text style={styles.loadMoreText}>Učitaj još</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -145,14 +177,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingHorizontal: 10,
     backgroundColor: "#F0F0F0",
-
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
-    color: "#274E6D"
+    color: "#274E6D",
   },
   card: {
     backgroundColor: "#E0F7FA",
@@ -164,7 +195,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
-    
   },
   cardHeader: {
     flexDirection: "row",
@@ -175,43 +205,35 @@ const styles = StyleSheet.create({
   firma: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#274E6D"
-
+    color: "#274E6D",
+    flex: 1,
+    paddingRight: 10,
   },
   position: {
     fontSize: 15,
     fontWeight: "bold",
-    color: "#222",
+    color: "#274E6D",
     marginBottom: 5,
-    color: "#274E6D"
-
   },
   location: {
     fontSize: 14,
-    color: "#555",
+    color: "#274E6D",
     marginBottom: 3,
-    color: "#274E6D"
-
   },
   deadline: {
     fontSize: 13,
-    color: "#777",
+    color: "#274E6D",
     marginBottom: 3,
-    color: "#274E6D"
-
   },
   numberPosition: {
     fontSize: 13,
-    color: "#777",
+    color: "#274E6D",
     marginBottom: 10,
-    color: "#274E6D"
-
   },
   logo: {
     width: 80,
     height: 80,
     borderRadius: 10,
-    objectFit: "contain",
   },
   loadMoreButton: {
     backgroundColor: "#5B8DB8",
@@ -225,9 +247,15 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   loadingContainer: {
-    flex: 1,
+    flex: 1, // ✅ OVO JE BITNO da se vidi loading
+    minHeight: 200, // ✅ dodatno osiguranje ako parent nema visinu
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 30,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: "#274E6D",
   },
 });
 

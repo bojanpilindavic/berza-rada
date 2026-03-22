@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -28,12 +27,15 @@ const ApplyScreen = ({ route }) => {
 
   const handleFileUpload = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "*/*",
+        copyToCacheDirectory: true,
+      });
 
       if (!result || result.canceled) return;
 
       const file = result.assets ? result.assets[0] : result;
-      if (!file || !file.uri) {
+      if (!file?.uri) {
         Alert.alert("Greška", "Neuspelo učitavanje CV-a.");
         return;
       }
@@ -45,25 +47,34 @@ const ApplyScreen = ({ route }) => {
   };
 
   const handleSubmit = async () => {
-    if (!name || !email || !cv || !cv.uri) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName || !trimmedEmail || !cv?.uri) {
       Alert.alert("Greška", "Ime, email i CV su obavezni!");
+      return;
+    }
+
+    // (opciono, ali korisno)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      Alert.alert("Greška", "Unesite ispravan email.");
       return;
     }
 
     setLoading(true);
     try {
       await addDoc(collection(db, "applications"), {
-        name,
-        email,
+        name: trimmedName,
+        email: trimmedEmail,
         message,
-        cvName: cv.name,
-        cvUri: cv.uri,
+        cvName: cv.name ?? "CV",
+        cvUri: cv.uri, // napomena: lokalni uri (nije sharable drugim korisnicima)
         jobId,
         appliedAt: new Date(),
         uid,
         employerId,
       });
-      console.log("🟡 UID koji se šalje:", uid);
 
       Alert.alert("Uspešno", "Vaša prijava je uspešno poslata!");
       setName("");
@@ -106,6 +117,8 @@ const ApplyScreen = ({ route }) => {
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
           />
 
           <Text style={styles.label}>Poruka (opciono)</Text>
@@ -125,7 +138,7 @@ const ApplyScreen = ({ route }) => {
             onPress={handleFileUpload}
           >
             <Text style={styles.uploadText}>
-              {cv ? `📄 ${cv.name}` : "Dodaj CV"}
+              {cv ? `📄 ${cv.name ?? "CV"}` : "Dodaj CV"}
             </Text>
           </TouchableOpacity>
 
@@ -150,11 +163,7 @@ const ApplyScreen = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: "#e6f0fa",
-    flexGrow: 1,
-  },
+  container: { padding: 20, backgroundColor: "#e6f0fa", flexGrow: 1 },
   title: {
     fontSize: 22,
     fontWeight: "bold",
@@ -162,15 +171,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-  label: {
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#274E6D",
-    marginTop: 10,
-  },
-  required: {
-    color: "red",
-  },
+  label: { fontWeight: "bold", fontSize: 16, color: "#274E6D", marginTop: 10 },
+  required: { color: "red" },
   input: {
     backgroundColor: "#fff",
     borderWidth: 1,
@@ -180,10 +182,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 16,
   },
-  messageInput: {
-    height: 80,
-    textAlignVertical: "top",
-  },
+  messageInput: { height: 80, textAlignVertical: "top" },
   uploadButton: {
     backgroundColor: "#f0f0f0",
     padding: 12,
@@ -191,11 +190,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
   },
-  uploadText: {
-    fontSize: 16,
-    color: "#5B8DB8",
-    fontWeight: "bold",
-  },
+  uploadText: { fontSize: 16, color: "#5B8DB8", fontWeight: "bold" },
   submitButton: {
     backgroundColor: "#5B8DB8",
     padding: 15,
@@ -204,11 +199,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 40,
   },
-  submitText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+  submitText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });
 
 export default ApplyScreen;

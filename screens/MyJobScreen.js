@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -19,34 +19,49 @@ import {
   doc,
   getFirestore,
 } from "firebase/firestore";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 const MyJobScreen = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const db = getFirestore();
   const auth = getAuth();
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const fetchMyJobs = async () => {
-      try {
-        const userId = auth.currentUser?.uid;
-        if (!userId) return;
+  const fetchMyJobs = useCallback(async () => {
+    try {
+      setLoading(true);
 
-        const q = query(collection(db, "jobs"), where("userId", "==", userId));
-        const querySnapshot = await getDocs(q);
-        const jobList = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setJobs(jobList);
-      } catch (error) {
-        console.error("Greška pri učitavanju mojih oglasa:", error);
-      } finally {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        setJobs([]);
         setLoading(false);
+        return;
       }
-    };
 
-    fetchMyJobs();
-  }, []);
+      const q = query(collection(db, "jobs"), where("userId", "==", userId));
+      const querySnapshot = await getDocs(q);
+
+      const jobList = querySnapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      setJobs(jobList);
+    } catch (error) {
+      console.error("Greška pri učitavanju mojih oglasa:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [auth, db]);
+
+  // Refetch svaki put kad se ekran fokusira
+  useFocusEffect(
+    useCallback(() => {
+      fetchMyJobs();
+    }, [fetchMyJobs])
+  );
 
   const handleDelete = async (jobId) => {
     Alert.alert(
@@ -71,35 +86,55 @@ const MyJobScreen = () => {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.firma}>{item.companyName || "Nepoznata firma"}</Text>
-        {item.logo && <Image source={{ uri: item.logo }} style={styles.logo} />}
-      </View>
-      <Text style={styles.position}>{item.position || "Nepoznata pozicija"}</Text>
-      <Text style={styles.location}>📍 {item.municipality || "Nepoznata lokacija"}</Text>
-      <Text style={styles.deadline}>⏳ Konkurs otvoren do: {item.endDate}</Text>
-      <Text style={styles.numberPosition}>
-        👥 Broj slobodnih pozicija: {item.numberOfPositions || "Nepoznato"}
-      </Text>
+    <View style={styles.card}>
+      {/* klikabilni deo za detalje */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
+        activeOpacity={0.8}
+      >
+        <View style={styles.cardHeader}>
+          <Text style={styles.firma}>
+            {item.companyName || "Nepoznata firma"}
+          </Text>
+          {item.logo ? (
+            <Image source={{ uri: item.logo }} style={styles.logo} />
+          ) : null}
+        </View>
 
+        <Text style={styles.position}>
+          {item.position || "Nepoznata pozicija"}
+        </Text>
+        <Text style={styles.location}>
+          📍 {item.municipality || "Nepoznata lokacija"}
+        </Text>
+        <Text style={styles.deadline}>
+          ⏳ Konkurs otvoren do: {item.endDate || "—"}
+        </Text>
+        <Text style={styles.numberPosition}>
+          👥 Broj slobodnih pozicija: {item.numberOfPositions ?? "—"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* dugme obriši odvojeno (nema nested press konflikta) */}
       <TouchableOpacity
         style={styles.deleteButton}
         onPress={() => handleDelete(item.id)}
       >
         <Text style={styles.deleteButtonText}>🗑️ Obriši oglas</Text>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </View>
   );
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>📂 Moji oglasi</Text>
+
       {loading ? (
-        <ActivityIndicator size="large" color="#5B8DB8" style={{ marginTop: 20 }} />
+        <ActivityIndicator
+          size="large"
+          color="#5B8DB8"
+          style={{ marginTop: 20 }}
+        />
       ) : jobs.length === 0 ? (
         <Text style={styles.noJobsText}>Nema tvojih oglasa.</Text>
       ) : (

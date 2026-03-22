@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -9,12 +9,20 @@ import {
   Image,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { collection, query, where, getDocs, getFirestore } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getFirestore,
+} from "firebase/firestore";
 
 const MunicipalityJobScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { municipality } = route.params;
+
+  const rawMunicipality = route.params?.municipality ?? "";
+  const municipality = useMemo(() => rawMunicipality.trim(), [rawMunicipality]);
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,16 +31,24 @@ const MunicipalityJobScreen = () => {
 
   useEffect(() => {
     const fetchJobs = async () => {
+      setLoading(true);
       try {
+        if (!municipality) {
+          setJobs([]);
+          return;
+        }
+
         const q = query(
           collection(db, "jobs"),
           where("municipality", "==", municipality)
         );
+
         const querySnapshot = await getDocs(q);
-        const jobsList = [];
-        querySnapshot.forEach((doc) => {
-          jobsList.push({ id: doc.id, ...doc.data() });
-        });
+        const jobsList = querySnapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+
         setJobs(jobsList);
       } catch (error) {
         console.error("Greška pri učitavanju poslova:", error);
@@ -42,22 +58,34 @@ const MunicipalityJobScreen = () => {
     };
 
     fetchJobs();
-  }, [municipality]);
+  }, [db, municipality]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
+      activeOpacity={0.8}
     >
       <View style={styles.cardHeader}>
-        <Text style={styles.firma}>{item.companyName || "Nepoznata firma"}</Text>
-        {item.logo && <Image source={{ uri: item.logo }} style={styles.logo} />}
+        <Text style={styles.firma}>
+          {item.companyName || "Nepoznata firma"}
+        </Text>
+        {item.logo ? (
+          <Image source={{ uri: item.logo }} style={styles.logo} />
+        ) : null}
       </View>
-      <Text style={styles.position}>{item.position || "Nepoznata pozicija"}</Text>
-      <Text style={styles.category}>📂 Kategorija: {item.category || "Nepoznato"}</Text>
-      <Text style={styles.deadline}>⏳ Konkurs otvoren do: {item.endDate || "Nepoznato"}</Text>
+
+      <Text style={styles.position}>
+        {item.position || "Nepoznata pozicija"}
+      </Text>
+      <Text style={styles.category}>
+        📂 Kategorija: {item.category || "Nepoznato"}
+      </Text>
+      <Text style={styles.deadline}>
+        ⏳ Konkurs otvoren do: {item.endDate || "Nepoznato"}
+      </Text>
       <Text style={styles.numberPosition}>
-        👥 Broj slobodnih pozicija: {item.numberOfPositions || "Nepoznato"}
+        👥 Broj slobodnih pozicija: {item.numberOfPositions ?? "Nepoznato"}
       </Text>
     </TouchableOpacity>
   );
@@ -65,11 +93,16 @@ const MunicipalityJobScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>
-        Opština: <Text style={{ fontWeight: "bold" }}>{municipality}</Text>
+        Opština:{" "}
+        <Text style={{ fontWeight: "bold" }}>{municipality || "-"}</Text>
       </Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#5B8DB8" style={{ marginTop: 20 }} />
+        <ActivityIndicator
+          size="large"
+          color="#5B8DB8"
+          style={{ marginTop: 20 }}
+        />
       ) : jobs.length === 0 ? (
         <Text style={styles.noJobsText}>Nema oglasa za ovu opštinu.</Text>
       ) : (

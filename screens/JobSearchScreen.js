@@ -1,5 +1,4 @@
-import { db } from "../firebase/firebaseConfig";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -11,27 +10,48 @@ import {
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { collection, getDocs } from "firebase/firestore";
+import { db } from "../firebase/firebaseConfig";
 
 const JobScreen = () => {
   const route = useRoute();
-  const searchQuery = route.params?.query || "";
   const navigation = useNavigation();
+
+  const rawQuery = route.params?.query ?? "";
+  const searchQuery = useMemo(() => rawQuery.trim(), [rawQuery]);
+  const normalizedQuery = useMemo(
+    () => searchQuery.toLowerCase(),
+    [searchQuery]
+  );
+
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchJobs = async () => {
+      setLoading(true);
       try {
         const jobsRef = collection(db, "jobs");
         const snapshot = await getDocs(jobsRef);
-        const allJobs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-        const filteredJobs = allJobs.filter(
-          (job) =>
-            job.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            job.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            job.municipality?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        const allJobs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+        // Ako nema query-ja, prikaži sve (ili promijeni po želji)
+        if (!normalizedQuery) {
+          setJobs(allJobs);
+          return;
+        }
+
+        const filteredJobs = allJobs.filter((job) => {
+          const position = (job.position || "").toLowerCase();
+          const description = (job.description || "").toLowerCase();
+          const municipality = (job.municipality || "").toLowerCase();
+
+          return (
+            position.includes(normalizedQuery) ||
+            description.includes(normalizedQuery) ||
+            municipality.includes(normalizedQuery)
+          );
+        });
 
         setJobs(filteredJobs);
       } catch (error) {
@@ -42,7 +62,7 @@ const JobScreen = () => {
     };
 
     fetchJobs();
-  }, [searchQuery]);
+  }, [normalizedQuery]);
 
   return (
     <View style={styles.container}>
@@ -63,18 +83,35 @@ const JobScreen = () => {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
-              onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
+              onPress={() =>
+                navigation.navigate("JobDetailsScreen", { job: item })
+              }
               activeOpacity={0.8}
             >
               <View style={styles.cardHeader}>
-                <Text style={styles.firma}>{item.companyName || "Nepoznata firma"}</Text>
-                {item.logo && <Image source={{ uri: item.logo }} style={styles.logo} />}
+                <Text style={styles.firma}>
+                  {item.companyName || "Nepoznata firma"}
+                </Text>
+                {item.logo ? (
+                  <Image source={{ uri: item.logo }} style={styles.logo} />
+                ) : null}
               </View>
-              <Text style={styles.position}>{item.position || "Nepoznata pozicija"}</Text>
-              <Text style={styles.location}>📍 {item.municipality || "Nepoznata lokacija"}</Text>
-              <Text style={styles.deadline}>⏳ Konkurs otvoren do: {item.endDate}</Text>
+
+              <Text style={styles.position}>
+                {item.position || "Nepoznata pozicija"}
+              </Text>
+
+              <Text style={styles.location}>
+                📍 {item.municipality || "Nepoznata lokacija"}
+              </Text>
+
+              <Text style={styles.deadline}>
+                ⏳ Konkurs otvoren do: {item.endDate || "-"}
+              </Text>
+
               <Text style={styles.numberPosition}>
-                👥 Broj slobodnih pozicija: {item.numberOfPositions || "Nepoznato"}
+                👥 Broj slobodnih pozicija:{" "}
+                {item.numberOfPositions ?? "Nepoznato"}
               </Text>
             </TouchableOpacity>
           )}
@@ -129,6 +166,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#274E6D",
+    flex: 1,
+    paddingRight: 8,
   },
   position: {
     fontSize: 15,

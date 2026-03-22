@@ -1,31 +1,35 @@
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "./firebaseConfig";
+import { db } from "../firebase/firebase"; // <-- PROMIJENI PUTANJU ako treba
+
 export const saveUserToFirestore = async (
   uid,
   userType,
   data,
   imageURL = null
 ) => {
+  if (!uid) return;
+
   const userData = {
     uid,
     userType,
-    email: data.email,
+    email: (data?.email || "").trim(),
     imageURL: imageURL || null,
     dateCreated: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   };
 
   if (userType === "worker") {
-    userData.fullName = data.fullName;
-    userData.municipality = data.municipality;
+    userData.fullName = (data?.fullName || "").trim();
+    userData.municipality = data?.municipality || "";
   } else if (userType === "employer") {
-    userData.companyName = data.companyName;
-    userData.jib = data.jib;
-    userData.activity = data.activity;
-    userData.municipality = data.municipality;
+    userData.companyName = (data?.companyName || "").trim();
+    userData.jib = (data?.jib || "").trim();
+    userData.activity = (data?.activity || "").trim();
+    userData.municipality = data?.municipality || "";
   }
 
   try {
-    await setDoc(doc(db, "users", uid), userData);
+    await setDoc(doc(db, "users", uid), userData, { merge: true });
     console.log("✅ Korisnik uspešno sačuvan u Firestore");
   } catch (error) {
     console.error("❌ Greška prilikom snimanja korisnika:", error);

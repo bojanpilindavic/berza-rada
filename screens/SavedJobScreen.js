@@ -9,16 +9,13 @@ import {
   Image,
 } from "react-native";
 import { getAuth } from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  getFirestore,
-} from "firebase/firestore";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { useNavigation } from "@react-navigation/native";
 
 const SavedJobsScreen = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const db = getFirestore();
   const auth = getAuth();
   const navigation = useNavigation();
@@ -27,21 +24,29 @@ const SavedJobsScreen = () => {
     const fetchSavedJobs = async () => {
       try {
         const user = auth.currentUser;
+
         if (!user) {
           setJobs([]);
+          setLoading(false); // ✅ bitno
           return;
         }
 
         // 1) Učitaj niz sačuvanih oglasa iz korisnikovog dokumenta
         const userSnap = await getDoc(doc(db, "users", user.uid));
         const savedJobsIds = userSnap.exists()
-          ? userSnap.data().savedJobs || []
+          ? userSnap.data()?.savedJobs || []
           : [];
+
+        if (savedJobsIds.length === 0) {
+          setJobs([]);
+          return;
+        }
 
         // 2) Za svaki ID fetch-uj dokument iz "jobs"
         const jobSnaps = await Promise.all(
           savedJobsIds.map((jobId) => getDoc(doc(db, "jobs", jobId)))
         );
+
         const jobList = jobSnaps
           .filter((snap) => snap.exists())
           .map((snap) => ({ id: snap.id, ...snap.data() }));
@@ -55,7 +60,7 @@ const SavedJobsScreen = () => {
     };
 
     fetchSavedJobs();
-  }, []);
+  }, [auth, db]);
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -63,10 +68,17 @@ const SavedJobsScreen = () => {
       onPress={() => navigation.navigate("JobDetailsScreen", { job: item })}
     >
       <View style={styles.cardHeader}>
-        <Text style={styles.company}>{item.companyName || "Nepoznata firma"}</Text>
-        {item.logo && <Image source={{ uri: item.logo }} style={styles.logo} />}
+        <Text style={styles.company}>
+          {item.companyName || "Nepoznata firma"}
+        </Text>
+        {item.logo ? (
+          <Image source={{ uri: item.logo }} style={styles.logo} />
+        ) : null}
       </View>
-      <Text style={styles.position}>{item.position || "Nepoznata pozicija"}</Text>
+
+      <Text style={styles.position}>
+        {item.position || "Nepoznata pozicija"}
+      </Text>
       <Text style={styles.location}>📍 {item.municipality || "-"}</Text>
       <Text style={styles.deadline}>⏳ Konkurs do: {item.endDate || "-"}</Text>
       <Text style={styles.numberPosition}>

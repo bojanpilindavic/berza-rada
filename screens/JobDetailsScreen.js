@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import {
-  View,
+  ScrollView,
   Text,
   Image,
   StyleSheet,
   TouchableOpacity,
-  ScrollView
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { getAuth } from "firebase/auth";
 import {
   getFirestore,
@@ -15,93 +18,112 @@ import {
   getDoc,
   updateDoc,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
 } from "firebase/firestore";
 import { MaterialIcons } from "@expo/vector-icons";
 
-
 const JobDetailsScreen = ({ route, navigation }) => {
   const { job } = route.params;
+
   const auth = getAuth();
   const user = auth.currentUser;
-  const employer = job.userId;
 
-  // Da li je trenutni korisnik poslodavac
-  const isEmployer = user && user.uid === employer;
-  const canApply = !isEmployer;
-
-  // Firestore ref i stanje za sačuvane oglase
   const db = getFirestore();
   const userDoc = user ? doc(db, "users", user.uid) : null;
+
+  const employer = job?.userId;
+  const isEmployer = !!user && user.uid === employer;
+  const canApply = !isEmployer;
+
   const [isSaved, setIsSaved] = useState(false);
 
   // Provera pri mount-u da li je oglas već sačuvan
   useEffect(() => {
-    if (!userDoc) return;
+    if (!userDoc || !job?.id) return;
+
+    let mounted = true;
+
     (async () => {
-      const snap = await getDoc(userDoc);
-      const savedJobs = snap.exists() ? snap.data().savedJobs || [] : [];
-      setIsSaved(savedJobs.includes(job.id));
+      try {
+        const snap = await getDoc(userDoc);
+        const savedJobs = snap.exists() ? snap.data()?.savedJobs || [] : [];
+        if (mounted) setIsSaved(savedJobs.includes(job.id));
+      } catch (e) {
+        console.error("Greška pri učitavanju sačuvanih oglasa:", e);
+      }
     })();
-  }, [userDoc, job.id]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [userDoc, job?.id]);
 
   // Toggle čuvanja oglasa u Firestore
-  const toggleSave = async () => {
-    if (!userDoc) return;
+  const toggleSave = useCallback(async () => {
+    // Ako nije ulogovan, vodi na login
+    if (!userDoc || !user || !job?.id) {
+      navigation.navigate("LoginScreen");
+      return;
+    }
+
     try {
       if (isSaved) {
         await updateDoc(userDoc, { savedJobs: arrayRemove(job.id) });
       } else {
         await updateDoc(userDoc, { savedJobs: arrayUnion(job.id) });
       }
-      setIsSaved(prev => !prev);
+      setIsSaved((prev) => !prev);
     } catch (e) {
       console.error("Greška pri čuvanju oglasa:", e);
     }
-  };
+  }, [userDoc, user, job?.id, isSaved, navigation]);
 
   // Postavljanje zvezdice u header
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity onPress={toggleSave} style={{ marginRight: 16 }}>
-  <MaterialIcons
-    name={isSaved ? "star" : "star-border"}
-    size={24}
-    color={isSaved ? "#FFD700" : "#75D5C2"}  // nepopunjena kontura u plavoj
-  />
-</TouchableOpacity>
-      )
+          <MaterialIcons
+            name={isSaved ? "star" : "star-border"}
+            size={24}
+            color={isSaved ? "#FFD700" : "#75D5C2"}
+          />
+        </TouchableOpacity>
+      ),
     });
-  }, [navigation, isSaved]);
+  }, [navigation, isSaved, toggleSave]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {job.logo && <Image source={{ uri: job.logo }} style={styles.logo} />}
+      {job?.logo ? (
+        <Image source={{ uri: job.logo }} style={styles.logo} />
+      ) : null}
 
-      <Text style={styles.company}>{job.companyName}</Text>
-      <Text style={styles.position}>{job.position}</Text>
-      <Text style={styles.location}>📍 {job.municipality}</Text>
+      <Text style={styles.company}>
+        {job?.companyName || "Nepoznata firma"}
+      </Text>
+      <Text style={styles.position}>
+        {job?.position || "Nepoznata pozicija"}
+      </Text>
+      <Text style={styles.location}>📍 {job?.municipality || "-"}</Text>
       <Text style={styles.deadline}>
-        ⏳ Konkurs otvoren do: {job.endDate}
+        ⏳ Konkurs otvoren do: {job?.endDate || "-"}
       </Text>
       <Text style={styles.positions}>
-        👥 Broj pozicija: {job.numberOfPositions}
+        👥 Broj pozicija: {job?.numberOfPositions ?? "-"}
       </Text>
 
-      <View style={styles.separator} />
+      <ScrollView />
 
       <Text style={styles.sectionTitle}>Opis posla</Text>
-      <Text style={styles.text}>
-        {job.description || "Opis nije unesen."}
-      </Text>
+      <Text style={styles.text}>{job?.description || "Opis nije unesen."}</Text>
 
       <Text style={styles.sectionTitle}>Uslovi</Text>
       <Text style={styles.text}>
-        {job.conditions || "Uslovi nisu navedeni."}
+        {job?.conditions || "Uslovi nisu navedeni."}
       </Text>
 
-      {canApply && (
+      {canApply ? (
         <TouchableOpacity
           style={styles.applyButton}
           onPress={() => {
@@ -109,7 +131,7 @@ const JobDetailsScreen = ({ route, navigation }) => {
               navigation.navigate("ApplyScreen", {
                 jobId: job.id,
                 uid: user.uid,
-                employer
+                employer,
               });
             } else {
               navigation.navigate("LoginScreen");
@@ -118,7 +140,7 @@ const JobDetailsScreen = ({ route, navigation }) => {
         >
           <Text style={styles.applyButtonText}>📨 Prijavi se</Text>
         </TouchableOpacity>
-      )}
+      ) : null}
     </ScrollView>
   );
 };
@@ -127,7 +149,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: "#e6f0fa",
-    flexGrow: 1
+    flexGrow: 1,
   },
   logo: {
     width: 120,
@@ -135,53 +157,48 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 15,
     borderRadius: 10,
-    resizeMode: "contain"
+    resizeMode: "contain",
   },
   company: {
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#274E6D"
+    color: "#274E6D",
   },
   position: {
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
     marginBottom: 10,
-    color: "#274E6D"
+    color: "#274E6D",
   },
   location: {
     textAlign: "center",
     marginTop: 5,
-    color: "#555"
+    color: "#555",
   },
   deadline: {
     textAlign: "center",
     marginTop: 5,
-    color: "#555"
+    color: "#555",
   },
   positions: {
     textAlign: "center",
     marginTop: 5,
     marginBottom: 10,
-    color: "#555"
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "#ccc",
-    marginVertical: 20
+    color: "#555",
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 5,
-    color: "#274E6D"
+    color: "#274E6D",
   },
   text: {
     fontSize: 15,
     color: "#333",
     marginBottom: 15,
-    lineHeight: 22
+    lineHeight: 22,
   },
   applyButton: {
     marginTop: 20,
@@ -189,13 +206,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#5B8DB8",
     borderRadius: 8,
     alignItems: "center",
-    marginBottom: 40
+    marginBottom: 40,
   },
   applyButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "bold"
-  }
+    fontWeight: "bold",
+  },
 });
 
 export default JobDetailsScreen;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
-const opstine = [
+const OPSTINE = [
   "Istočno Novo Sarajevo",
   "Istočna Ilidža",
   "Pale",
@@ -21,23 +21,30 @@ const opstine = [
 const PretragaOpstine = () => {
   const navigation = useNavigation();
 
+  const goToMunicipality = useCallback(
+    (opstina) => {
+      navigation.navigate("MunicipalityJobScreen", { municipality: opstina });
+    },
+    [navigation]
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pretraga po opštinama</Text>
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        {opstine.map((opstina, index) => (
+        {OPSTINE.map((opstina) => (
           <TouchableOpacity
-            key={index}
+            key={opstina}
             style={styles.button}
-            onPress={() =>
-              navigation.navigate("MunicipalityJobScreen", {
-                municipality: opstina,
-              })
-            }
+            activeOpacity={0.85}
+            onPress={() => goToMunicipality(opstina)}
+            accessibilityRole="button"
+            accessibilityLabel={`Pretraga za opštinu ${opstina}`}
           >
             <FontAwesome5
               name="map-marker-alt"
@@ -45,7 +52,9 @@ const PretragaOpstine = () => {
               color="#fff"
               style={styles.icon}
             />
-            <Text style={styles.buttonText}>{opstina}</Text>
+            <Text style={styles.buttonText} numberOfLines={1}>
+              {opstina}
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -73,6 +82,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingLeft: 4,
     paddingRight: 4,
+    paddingBottom: 4,
   },
   button: {
     flexDirection: "row",
